@@ -13,14 +13,15 @@
   width: 88px; flex-shrink: 0; background: var(--dz-black);
   border-right: 1px solid rgba(46,46,66,0.5);
   display: flex; flex-direction: column; align-items: center;
-  padding: 20px 0 16px; gap: 2px; z-index: 40;
-  user-select: none;
+  padding: 14px 0 10px; gap: 0; z-index: 40;
+  user-select: none; overflow-y: auto; overflow-x: hidden;
 }
+.dz-sidenav::-webkit-scrollbar { width: 0; }
 
 /* Diamond logo */
-.dz-logo-wrap { margin-bottom: 24px; width: 44px; height: 44px; position: relative; display: flex; align-items: center; justify-content: center; }
+.dz-logo-wrap { margin-bottom: 14px; width: 40px; height: 40px; position: relative; display: flex; align-items: center; justify-content: center; }
 .dz-logo-diamond { position: absolute; inset: 0; background: var(--dz-red); transform: rotate(45deg); border-radius: 2px; box-shadow: 4px 4px 0px rgba(197,48,48,0.35); }
-.dz-logo-text { position: relative; color: var(--dz-white); font-weight: 900; font-size: 16px; font-family: var(--font-mono); letter-spacing: -1px; }
+.dz-logo-text { position: relative; color: var(--dz-white); font-weight: 900; font-size: 14px; font-family: var(--font-mono); letter-spacing: -1px; }
 
 /* Nav items */
 .dz-nav-item {
@@ -29,9 +30,10 @@
   transition: color 0.2s; border: none; background: none;
 }
 .dz-nav-item:hover { color: var(--dz-white); }
-.dz-nav-item .dz-nav-icon { width: 24px; height: 24px; position: relative; z-index: 2; transition: transform 0.2s; }
+.dz-nav-item { padding: 9px 0; }
+.dz-nav-item .dz-nav-icon { width: 20px; height: 20px; position: relative; z-index: 2; transition: transform 0.2s; }
 .dz-nav-item:hover .dz-nav-icon { transform: scale(1.1); }
-.dz-nav-item .dz-nav-label { font-size: 13px; margin-top: 4px; font-family: var(--font-serif); letter-spacing: 0.08em; position: relative; z-index: 2; opacity: 0.9; }
+.dz-nav-item .dz-nav-label { font-size: 11px; margin-top: 2px; font-family: var(--font-serif); letter-spacing: 0.06em; position: relative; z-index: 2; opacity: 0.9; }
 
 /* Nav active state */
 .dz-nav-item.active { color: var(--dz-white); }
