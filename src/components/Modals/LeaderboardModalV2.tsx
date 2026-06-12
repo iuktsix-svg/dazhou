@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSillytavern } from '../../hooks/useSillytavern';
-import { Trophy, Swords, Star, Crown, Sparkles, ChevronLeft } from 'lucide-react';
+import { Trophy, Swords, Star, Crown, Sparkles, ChevronLeft, BookOpen, Trash2 } from 'lucide-react';
 
 interface Props { isOpen: boolean; onClose: () => void; }
 interface LbEntry { 排名或赏金?: string; 上榜理由与罪状?: string; 最后出没地点?: string; }
+interface BookDef { key: string; label: string; subtitle: string; icon: typeof Crown; color: string; spine: string; width: number; core: boolean; }
 
-const BOOKS = [
-  { key: '定海神针榜', label: '定海神针榜', subtitle: '九位天人', icon: Crown, color: '#b8860b', spine: '#8B6914', width: 38 },
-  { key: '太阿录', label: '太阿录', subtitle: '绝顶高手', icon: Swords, color: '#8B4513', spine: '#6B3410', width: 34 },
-  { key: '惊蛰榜', label: '惊蛰榜', subtitle: '青年才俊', icon: Sparkles, color: '#1E5A7A', spine: '#16445E', width: 36 },
-  { key: '群芳谱', label: '群芳谱', subtitle: '江湖群芳', icon: Star, color: '#8B3A5A', spine: '#6B2A44', width: 32 },
-  { key: '名锋卷', label: '名锋卷', subtitle: '名剑锋镝', icon: Swords, color: '#4A6A6A', spine: '#3A5A5A', width: 35 },
+const CORE_BOOKS: BookDef[] = [
+  { key: '定海神针榜', label: '定海神针榜', subtitle: '九位天人', icon: Crown, color: '#b8860b', spine: '#8B6914', width: 38, core: true },
+  { key: '太阿录', label: '太阿录', subtitle: '绝顶高手', icon: Swords, color: '#8B4513', spine: '#6B3410', width: 34, core: true },
+  { key: '惊蛰榜', label: '惊蛰榜', subtitle: '青年才俊', icon: Sparkles, color: '#1E5A7A', spine: '#16445E', width: 36, core: true },
+  { key: '群芳谱', label: '群芳谱', subtitle: '江湖群芳', icon: Star, color: '#8B3A5A', spine: '#6B2A44', width: 32, core: true },
+  { key: '名锋卷', label: '名锋卷', subtitle: '名剑锋镝', icon: Swords, color: '#4A6A6A', spine: '#3A5A5A', width: 35, core: true },
+  { key: '大周风土人情', label: '大周风土人情', subtitle: '九州志异', icon: BookOpen, color: '#5A7A4A', spine: '#3A5A2A', width: 40, core: true },
 ];
 
 export function LeaderboardModal({ isOpen, onClose }: Props) {
-  const { activeChat } = useSillytavern();
+  const { activeChat, sendMessage } = useSillytavern();
   const [boards, setBoards] = useState<Record<string, Record<string, LbEntry>>>({});
   const [openBook, setOpenBook] = useState<string | null>(null);
 
@@ -25,6 +27,19 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
   }, [isOpen, activeChat]);
 
   if (!isOpen) return null;
+
+  // Merge core books with any dynamic books from game variables
+  const dynamicKeys = Object.keys(boards).filter(k => !CORE_BOOKS.find(b => b.key === k));
+  const allBooks: BookDef[] = [
+    ...CORE_BOOKS,
+    ...dynamicKeys.map(k => ({
+      key: k, label: k, subtitle: '江湖秘卷', icon: BookOpen, color: '#6A5A7A', spine: '#4A3A5A', width: 36, core: false,
+    })),
+  ];
+
+  const handleDeleteDynamic = (key: string) => {
+    sendMessage(`删除书籍「${key}」。`);
+  };
 
   const getRankStyle = (i: number) => {
     if (i === 0) return { bg: 'rgba(184,134,11,0.08)', border: 'rgba(184,134,11,0.3)', badge: '🥇' };
@@ -37,7 +52,7 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
     <div className="dz-modal-shell" onClick={onClose}>
       <div className="dz-modal-box wide" style={{ maxWidth: 660 }} onClick={e => e.stopPropagation()}>
         <div className="dz-modal-head">
-          <h2>{openBook ? BOOKS.find(b => b.key === openBook)?.label : '武林藏经阁'}</h2>
+          <h2>{openBook ? allBooks.find(b => b.key === openBook)?.label : '武林藏经阁'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             {openBook && <button onClick={() => setOpenBook(null)} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>}
             <button className="dz-modal-close-btn" onClick={onClose}>×</button>
@@ -66,8 +81,8 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
                 }} />
 
                 {/* Books */}
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 6, paddingBottom: 16, position: 'relative', zIndex: 1 }}>
-                  {BOOKS.map((book) => {
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: 6, paddingBottom: 16, position: 'relative', zIndex: 1, flexWrap: 'wrap' }}>
+                  {allBooks.map((book) => {
                     const Icon = book.icon;
                     const entries = boards[book.key] || {};
                     const count = Object.keys(entries).length;
@@ -108,8 +123,13 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
                         </div>
 
                         {/* Book bottom */}
-                        <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--wx-ink-dim)', fontFamily: 'var(--font-body)', marginTop: 4, textAlign: 'center' }}>
+                        <div style={{ fontSize: 'var(--text-2xs)', color: 'var(--wx-ink-dim)', fontFamily: 'var(--font-body)', marginTop: 4, textAlign: 'center', display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                           {book.subtitle}
+                          {!book.core && (
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteDynamic(book.key); }} title="删除此卷" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--wx-ink-dim)', padding: 0, fontSize: 10 }}>
+                              <Trash2 size={10} />
+                            </button>
+                          )}
                         </div>
                         {count > 0 && (
                           <div style={{
@@ -143,7 +163,7 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
                 style={{ perspective: 1200, transformStyle: 'preserve-3d' }}
               >
                 {(() => {
-                  const bookInfo = BOOKS.find(b => b.key === openBook)!;
+                  const bookInfo = allBooks.find(b => b.key === openBook)!;
                   const current = boards[bookInfo.key] || {};
                   const entries = Object.entries(current);
                   return (
