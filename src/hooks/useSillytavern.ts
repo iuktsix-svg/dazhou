@@ -53,7 +53,6 @@ export function useSillytavern() {
     setPresets(p);
     setSettings(s || null);
     setActiveLorebookIds(s?.activeLorebookIds || []);
-    setChats(c);
     // Auto-create demo chat if none exist
     if (c.length === 0 && s) {
       const demoChat: ChatSession = {
@@ -72,6 +71,7 @@ export function useSillytavern() {
       c = [demoChat, ...c];
       setActiveChatId(demoChat.id);
     }
+    setChats(c);
     setIsLoading(false);
   }, []);
 
