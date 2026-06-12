@@ -5,7 +5,14 @@ interface Props { isOpen: boolean; onClose: () => void; onSend: (t: string) => v
 interface ItemData { 物品类型?: string; 物品描述?: string; 数量?: number; type?: string; description?: string; quantity?: number; }
 
 const SLOT_LIMIT = 20;
-const TYPE_ICONS: Record<string, string> = { '丹药': '💊', '武器': '⚔', '杂物': '📦', '秘籍': '📜', '防具': '🛡', '饰品': '💎' };
+const TYPE_META: Record<string, { char: string; color: string }> = {
+  '丹药': { char: '丹', color: '#8B4513' },
+  '武器': { char: '兵', color: '#6B3A3A' },
+  '杂物': { char: '杂', color: '#5A5A5A' },
+  '秘籍': { char: '卷', color: '#8B6914' },
+  '防具': { char: '甲', color: '#3A5A6B' },
+  '饰品': { char: '佩', color: '#6B5A8A' },
+};
 
 export function BagModal({ isOpen, onClose, onSend }: Props) {
   const { activeChat } = useSillytavern();
@@ -65,7 +72,7 @@ export function BagModal({ isOpen, onClose, onSend }: Props) {
                     borderRadius: 'var(--rd-md)', boxShadow: 'var(--sh-sm)',
                     transition: 'all 0.15s', position: 'relative',
                   }}>
-                    <div style={{ fontSize: 28, marginBottom: 6 }}>{TYPE_ICONS[type] || '📦'}</div>
+                    <div style={{ fontSize: 28, marginBottom: 6 }}>{(TYPE_META[type]?.char || '物')}</div>
                     <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--wx-ink)', lineHeight: 1.3, marginBottom: 4 }}>{k}</div>
                     <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-gold)' }}>×{qty}</div>
                     <div style={{ position: 'absolute', top: 6, right: 8, fontFamily: 'var(--font-body)', fontSize: 9, color: 'var(--wx-ink-dim)', background: 'var(--wx-surface)', padding: '1px 6px', borderRadius: 'var(--rd-full)' }}>{type}</div>

@@ -67,8 +67,11 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
         <div className="dz-modal-head">
           <h2>{openBook ? allBooks.find(b => b.key === openBook)?.label : '武林藏经阁'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            {openBook && <button onClick={() => { const bk = allBooks.find(b => b.key === openBook); if (bk) markRead(bk.key, Object.keys(boards[bk.key] || {}).length); setOpenBook(null); }} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>}
-            <button className="dz-modal-close-btn" onClick={onClose}>×</button>
+            {openBook ? (
+              <button onClick={() => { const bk = allBooks.find(b => b.key === openBook); if (bk) markRead(bk.key, Object.keys(boards[bk.key] || {}).length); setOpenBook(null); }} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>
+            ) : (
+              <button className="dz-modal-close-btn" onClick={onClose}>×</button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {openBook && <button onClick={() => setOpenBook(null)} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>}
