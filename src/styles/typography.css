@@ -1,0 +1,100 @@
+/* ============================================================
+   大周日暮录 — Typography
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@300;400;600;700;900&display=swap');
+
+/* ---- Base ---- */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--moon-white);
+  background: var(--ink-deep);
+  letter-spacing: var(--tracking-normal);
+}
+
+/* ---- Headings ---- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-wide);
+  color: var(--gold);
+}
+
+h1 { font-size: var(--text-3xl); font-weight: 900; }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+/* ---- UI Text ---- */
+.ui-text, button, input, select, textarea, label, .panel-label {
+  font-family: var(--font-ui);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* ---- Seal / Calligraphy ---- */
+.seal-text {
+  font-family: var(--font-seal);
+  color: var(--vermillion);
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+/* ---- Story Body ---- */
+.story-text {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: var(--leading-relaxed);
+  letter-spacing: 0.01em;
+  color: var(--paper-text);
+}
+
+/* ---- Chinese-specific typographic features ---- */
+.chinese-text {
+  hanging-punctuation: first allow-end last;
+  text-spacing-trim: trim-start;
+}
+
+/* ---- Vertical rhythm ---- */
+p + p { margin-top: 0.8em; }
+
+/* ---- Links ---- */
+a {
+  color: var(--gold);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-ink);
+}
+a:hover { color: var(--gold-light); }
+
+/* ---- Selection ---- */
+::selection {
+  background: var(--vermillion-glow);
+  color: var(--moon-white);
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-border);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-dark);
+}

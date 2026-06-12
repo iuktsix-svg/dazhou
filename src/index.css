@@ -1,0 +1,44 @@
+/* ============================================================
+   大周日暮录 — P5R-inspired Global Styles
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Halftone dot patterns */
+.halftone {
+  background-image: radial-gradient(circle, rgba(197,48,48,0.10) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.halftone-gold {
+  background-image: radial-gradient(circle, rgba(201,166,92,0.12) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+/* Angle-cut corners */
+.angle-cut {
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+.angle-cut-sm {
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+/* Bold offset shadow */
+.shadow-dz {
+  box-shadow: 4px 4px 0px rgba(197,48,48,0.35);
+}
+.shadow-dz-gold {
+  box-shadow: 4px 4px 0px rgba(201,166,92,0.35);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--dz-dark); }
+::-webkit-scrollbar-thumb { background: var(--dz-gray-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--dz-red); }
+
+::selection { background: rgba(197,48,48,0.45); color: var(--dz-white); }
+
+body {
+  margin: 0; background: var(--dz-black); color: var(--dz-white);
+  font-family: var(--font-sans); overflow: hidden; height: 100vh;
+}
+#root { height: 100vh; overflow: hidden; }

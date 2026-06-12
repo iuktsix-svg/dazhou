@@ -1,0 +1,24 @@
+/* ============================================================
+   大周日暮录 — P5R-inspired Design Tokens
+   ============================================================ */
+:root {
+  --dz-red: #C53030;
+  --dz-red-dark: #8B1E1E;
+  --dz-red-light: #E05050;
+  --dz-black: #08080E;
+  --dz-dark: #12121C;
+  --dz-gray: #1E1E2C;
+  --dz-gray-light: #2E2E42;
+  --dz-white: #E8E4DC;
+  --dz-white-dark: #B8B4AC;
+  --dz-gold: #C9A65C;
+  --dz-gold-dark: #9B7A38;
+  --dz-blue: #3B82F6;
+  --dz-green: #22C55E;
+  --dz-text: #C8C4BC;
+  --dz-text-dim: #6B6575;
+
+  --font-serif: 'Noto Serif SC', Georgia, serif;
+  --font-sans: 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+}
