@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSillytavern } from '../hooks/useSillytavern';
+import { OPENING_TEXTS } from '../data/openings';
 import { ChevronRight, User, Users } from 'lucide-react';
 
 interface Props { onStart: () => void; }
@@ -52,8 +53,9 @@ export function NewGameFlow({ onStart }: Props) {
         const { getChat, saveChat } = await import('../sillytavern/database');
         const chat = await getChat(cid);
         if (chat) {
-          // Display text: the beautiful opening story (replace {{user}} with player desc)
-          const displayText = pendingOpening.text.replace(/\{\{user\}\}/g, desc || `${gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客'}`);
+          // Display text: replace {主角} and {{user}} with player desc
+          const playerDesc = name.trim() || (gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客');
+          const displayText = pendingOpening.text.replace(/\{主角\}/g, playerDesc).replace(/\{\{user\}\}/g, playerDesc);
           // AI prompt: player info for AI to start generating
           const aiPrompt = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}\n\n请根据以下开场背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态(健康)、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`;
           chat.messages = [
@@ -136,7 +138,7 @@ export function NewGameFlow({ onStart }: Props) {
           {OPENINGS.map((o, i) => (
             <motion.button key={o.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} whileHover={{ y: -3, boxShadow: 'var(--sh-gold)' }} whileTap={{ scale: 0.98 }}
               onClick={() => {
-                const openingText = `第一回 ${o.title}\n\n${o.desc}\n\n{{user}}正站在${o.title}的场景中…`;
+                const openingText = OPENING_TEXTS[o.id] || `第一回 ${o.title}\n\n${o.desc}`;
                 setPendingOpening({ text: openingText, id: o.id });
               }}
               style={{ padding: '18px 16px', cursor: 'pointer', textAlign: 'left', background: 'var(--wx-card)', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', boxShadow: 'var(--sh-sm)', transition: 'all 0.2s', fontFamily: 'inherit' }}>
