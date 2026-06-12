@@ -21,20 +21,25 @@ export function SettingsModal({ onClose }: Props) {
   const handleCreateChat = async () => { await createChat(newChatName.trim() || undefined); setNewChatName(''); };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-xl" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{tab === 'settings' ? '系统设置' : '存档管理'}</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }} onClick={onClose}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: 640, maxHeight: '82vh', background: 'var(--dz-dark)', border: '1px solid var(--dz-gray-light)', boxShadow: '0 8px 40px rgba(0,0,0,0.8)', clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(197,48,48,0.06) 1px, transparent 1px)', backgroundSize: '8px 8px', pointerEvents: 'none', zIndex: 0 }} />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--dz-gray-light)', background: 'rgba(197,48,48,0.08)' }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 700, color: 'var(--dz-white)', letterSpacing: 1, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 4, height: 22, background: 'var(--dz-red)', clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)' }} />
+            {tab === 'settings' ? '系统设置' : '存档管理'}
+          </h2>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 2, background: 'none', border: 'none', color: 'var(--dz-text)', cursor: 'pointer', fontSize: 20 }}>×</button>
         </div>
 
         {/* Tab bar */}
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--ink-border)', padding: '0 20px' }}>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', borderBottom: '1px solid var(--ink-border)', padding: '0 20px' }}>
           <button onClick={() => setTab('settings')} style={{ padding: '10px 18px', background: 'none', border: 'none', borderBottom: tab === 'settings' ? '2px solid var(--dz-red)' : '2px solid transparent', color: tab === 'settings' ? 'var(--dz-white)' : 'var(--dz-text-dim)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 14 }}>设置</button>
           <button onClick={() => setTab('archive')} style={{ padding: '10px 18px', background: 'none', border: 'none', borderBottom: tab === 'archive' ? '2px solid var(--dz-red)' : '2px solid transparent', color: tab === 'archive' ? 'var(--dz-white)' : 'var(--dz-text-dim)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 14 }}>存档</button>
         </div>
 
-        <div className="modal-body">
+        <div style={{ position: 'relative', zIndex: 1, flex: 1, overflow: 'auto', padding: '16px 20px' }}>
           {tab === 'settings' && (
             <>
               <section><h3>角色与用户</h3>
@@ -88,11 +93,12 @@ export function SettingsModal({ onClose }: Props) {
         </div>
 
         {tab === 'settings' && (
-          <div className="modal-footer">
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 20px', borderTop: '1px solid var(--ink-border)' }}>
             <button onClick={handleSave} className="dz-btn dz-btn-red">保存</button>
             <button onClick={onClose} className="dz-btn dz-btn-outline">取消</button>
           </div>
         )}
+        <div style={{ position: 'relative', zIndex: 1, height: 3, flexShrink: 0, background: 'linear-gradient(90deg, var(--dz-red), var(--dz-gold), var(--dz-red))' }} />
       </div>
     </div>
   );
