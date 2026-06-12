@@ -9,11 +9,11 @@ interface BookDef { key: string; label: string; subtitle: string; icon: typeof C
 
 const CORE_BOOKS: BookDef[] = [
   { key: '定海神针榜', label: '定海神针榜', subtitle: '九位天人', icon: Crown, color: '#b8860b', spine: '#8B6914', width: 38, core: true },
-  { key: '太阿录', label: '太阿录', subtitle: '绝顶高手', icon: Swords, color: '#8B4513', spine: '#6B3410', width: 34, core: true },
-  { key: '惊蛰榜', label: '惊蛰榜', subtitle: '青年才俊', icon: Sparkles, color: '#1E5A7A', spine: '#16445E', width: 36, core: true },
-  { key: '群芳谱', label: '群芳谱', subtitle: '江湖群芳', icon: Star, color: '#8B3A5A', spine: '#6B2A44', width: 32, core: true },
-  { key: '名锋卷', label: '名锋卷', subtitle: '名剑锋镝', icon: Swords, color: '#4A6A6A', spine: '#3A5A5A', width: 35, core: true },
-  { key: '岁时节庆录', label: '岁时节庆录', subtitle: '九州盛会', icon: BookOpen, color: '#5A7A4A', spine: '#3A5A2A', width: 42, core: true },
+  { key: '太阿录', label: '太阿录', subtitle: '绝顶高手', icon: Swords, color: '#8B4513', spine: '#6B3410', width: 38, core: true },
+  { key: '惊蛰榜', label: '惊蛰榜', subtitle: '青年才俊', icon: Sparkles, color: '#1E5A7A', spine: '#16445E', width: 38, core: true },
+  { key: '群芳谱', label: '群芳谱', subtitle: '江湖群芳', icon: Star, color: '#8B3A5A', spine: '#6B2A44', width: 38, core: true },
+  { key: '名锋卷', label: '名锋卷', subtitle: '名剑锋镝', icon: Swords, color: '#4A6A6A', spine: '#3A5A5A', width: 38, core: true },
+  { key: '岁时节庆录', label: '岁时节庆录', subtitle: '九州盛会', icon: BookOpen, color: '#5A7A4A', spine: '#3A5A2A', width: 38, core: true },
 ];
 
 export function LeaderboardModal({ isOpen, onClose }: Props) {
@@ -33,7 +33,7 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
   const allBooks: BookDef[] = [
     ...CORE_BOOKS,
     ...dynamicKeys.map(k => ({
-      key: k, label: k, subtitle: '江湖秘卷', icon: BookOpen, color: '#6A5A7A', spine: '#4A3A5A', width: 36, core: false,
+      key: k, label: k, subtitle: '江湖秘卷', icon: BookOpen, color: '#6A5A7A', spine: '#4A3A5A', width: 38, core: false,
     })),
   ];
 
