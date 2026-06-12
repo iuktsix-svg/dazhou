@@ -51,7 +51,9 @@ export function useSillytavern() {
     setLorebooks(l);
     setPresets(p);
     setSettings(s || null);
-    setActiveLorebookIds(s?.activeLorebookIds || []);
+    // Auto-activate all imported lorebooks if none selected
+    const activeIds = s?.activeLorebookIds?.length ? s.activeLorebookIds : l.map(b => b.id);
+    setActiveLorebookIds(activeIds);
     setChats(c);
     setIsLoading(false);
   }, []);
