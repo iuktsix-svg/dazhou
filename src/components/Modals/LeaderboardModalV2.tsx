@@ -28,8 +28,11 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
 
   if (!isOpen) return null;
 
-  // Merge core books with any dynamic books from game variables
-  const dynamicKeys = Object.keys(boards).filter(k => !CORE_BOOKS.find(b => b.key === k));
+  // Merge core books with dynamic books, filtering out 追杀/悬赏 related
+  const dynamicKeys = Object.keys(boards).filter(k =>
+    !CORE_BOOKS.find(b => b.key === k) &&
+    !k.includes('追杀') && !k.includes('悬赏') && !k.includes('杀')
+  );
   const allBooks: BookDef[] = [
     ...CORE_BOOKS,
     ...dynamicKeys.map(k => ({
