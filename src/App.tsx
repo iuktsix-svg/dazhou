@@ -49,8 +49,9 @@ function App() {
 
   // Auto-select first chat when entering main game with chats but no active
   useEffect(() => {
+    console.log('[app] checking:', { showWelcome, showNewGame, chatsN: chats.length, hasActive: !!activeChat });
     if (!showWelcome && !showNewGame && chats.length > 0 && !activeChat) {
-      // The most recent chat (first in the list) was just created by NewGameFlow
+      console.log('[app] auto-selecting chat:', chats[0].id, chats[0].name, 'msgs:', chats[0].messages?.length);
       setActiveChatId(chats[0].id);
     }
   }, [showWelcome, showNewGame, chats, activeChat]);
