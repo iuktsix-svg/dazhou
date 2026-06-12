@@ -101,12 +101,12 @@ export function NewGameFlow({ onStart }: Props) {
   useEffect(() => {
     if (!pendingOpening) return;
     (async () => {
-      await createChat(`${gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客'} - 江湖之旅`);
+      try { await createChat(`${gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客'} - 江湖之旅`);
       // Start vars are pre-defined in START_VARS map — AI will set them based on opening context
       const introMsg = desc.trim()
         ? `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。自我介绍：${desc}\n\n请根据上述开局背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`
         : `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。\n\n请根据上述开局背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`;
-      sendMessage(introMsg);
+      sendMessage(introMsg); } catch {} onStart();
       onStart();
     })();
   }, [pendingOpening]);
