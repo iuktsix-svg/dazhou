@@ -51,6 +51,7 @@ export function StoryArea({ messages, streamingText, isStreaming, onOption }: Pr
   // Strip tags for clean display
   const cleanText = rawText
     .replace(/<maintext>/gi, '').replace(/<\/maintext>/gi, '')
+    .replace(/<option>[\s\S]*?<\/option>/gi, '')
     .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
     .replace(/<sum>[\s\S]*?<\/sum>/gi, '')
     .replace(/<vars>[\s\S]*?<\/vars>/gi, '');
