@@ -33,6 +33,7 @@ export function NewGameFlow({ onStart }: Props) {
   const [introLine, setIntroLine] = useState(0);
   const [gender, setGender] = useState<'男' | '女' | '其他'>('男');
   const [desc, setDesc] = useState('');
+  const [name, setName] = useState('');
   const [pendingOpening, setPendingOpening] = useState<{ text: string; id: number } | null>(null);
 
   useEffect(() => {
@@ -45,7 +46,8 @@ export function NewGameFlow({ onStart }: Props) {
   useEffect(() => {
     if (!pendingOpening) return;
     (async () => {
-      const cid = await createChat(`${gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客'} - 江湖之旅`).catch(() => null);
+      const playerName = name.trim() || (gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客');
+      const cid = await createChat(`${playerName} - 江湖之旅`).catch(() => null);
       // Save opening as user message so it shows in UI
       if (cid) {
         const { getChat, saveChat } = await import('../sillytavern/database');
@@ -93,7 +95,11 @@ export function NewGameFlow({ onStart }: Props) {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--wx-paper)', padding: 20 }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ maxWidth: 460, width: '100%', textAlign: 'center' }}>
         <h2 style={{ fontFamily: 'var(--font-title)', fontSize: 'var(--text-2xl)', color: 'var(--wx-vermillion)', letterSpacing: 2, marginBottom: 32 }}>创建角色</h2>
-        <div style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', marginBottom: 8 }}>你的名字</div>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="留下你的江湖名号…" style={{ width: '100%', padding: '12px 16px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-card)', color: 'var(--wx-ink)', fontFamily: 'var(--font-title)', fontSize: 'var(--text-lg)', textAlign: 'center', outline: 'none', letterSpacing: 2 }} />
+        </div>
+        <div style={{ marginBottom: 24 }}>
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', marginBottom: 12 }}>选择性别</div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
             {(['男', '女', '其他'] as const).map(g => (

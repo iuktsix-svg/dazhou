@@ -26,7 +26,7 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 type DrawerType = 'realm' | 'status' | 'martial' | null;
 
 function App() {
-  const { isLoading, activeChat, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError } = useSillytavern();
+  const { isLoading, activeChat, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, loadAll } = useSillytavern();
   const { notify } = useNotify();
   const { theme, toggle: toggleTheme } = useTheme();
   const [panel, setPanel] = useState<PanelId>(null);
@@ -46,6 +46,9 @@ function App() {
   const openDrawer = useCallback((d: DrawerType) => { setDrawer(d); if (d) setPanel(null); }, []);
   const openPanel = useCallback((p: PanelId) => { setPanel(p); setDrawer(null); }, []);
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
+
+  // Reload chats when entering game from welcome
+  useEffect(() => { if (!showWelcome && !showNewGame) loadAll(); }, [showWelcome, showNewGame]);
 
   if (isLoading) return <div className="dz-loading">大周日暮录</div>;
 
