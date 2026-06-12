@@ -4,6 +4,7 @@ import { Package } from 'lucide-react';
 
 interface Props { isOpen: boolean; onClose: () => void; onSend: (t: string) => void; }
 interface ItemData { 物品类型?: string; 物品描述?: string; 数量?: number; type?: string; description?: string; quantity?: number; }
+const TYPE_ICONS: Record<string, string> = { '丹药': '💊', '武器': '⚔', '杂物': '📦', '秘籍': '📜', '防具': '🛡', '饰品': '💎' };
 
 export function StorageModal({ isOpen, onClose, onSend }: Props) {
   const { activeChat } = useSillytavern();
@@ -12,71 +13,67 @@ export function StorageModal({ isOpen, onClose, onSend }: Props) {
 
   useEffect(() => {
     if (!isOpen) return;
-    const vars = (activeChat?.variables || {}) as Record<string, unknown>;
-    setItems((vars['仓库'] || vars['主角状态.仓库'] || {}) as Record<string, ItemData>);
-    const k = Object.keys(vars['仓库'] || vars['主角状态.仓库'] || {});
-    if (k.length && !sel) setSel(k[0]);
+    const v = (activeChat?.variables || {}) as Record<string, unknown>;
+    setItems((v['仓库'] || {}) as Record<string, ItemData>);
   }, [isOpen, activeChat]);
-
   if (!isOpen) return null;
-
-  const item = sel ? items[sel] : null;
   const keys = Object.keys(items);
+  const item = sel ? items[sel] : null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }}
-      onClick={onClose}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{
-        position: 'relative', width: '100%', maxWidth: 520, maxHeight: '80vh',
-        background: 'var(--dz-dark)', border: '1px solid var(--dz-gray-light)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.8), 4px 4px 0px rgba(197,48,48,0.2)',
-        clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)',
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(197,48,48,0.06) 1px, transparent 1px)', backgroundSize: '8px 8px', pointerEvents: 'none', zIndex: 0 }} />
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--dz-gray-light)', background: 'rgba(197,48,48,0.08)' }}>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 700, color: 'var(--dz-white)', letterSpacing: 1, margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 4, height: 22, background: 'var(--dz-red)', clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)' }} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }} onClick={onClose}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(44,36,22,0.55)' }} />
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: 580, maxHeight: '82vh', background: 'var(--wx-paper-light)', border: '1px solid var(--bdr-ink)', borderRadius: 'var(--rd-xl)', boxShadow: 'var(--sh-lg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--bdr-subtle)' }}>
+          <h2 style={{ fontFamily: 'var(--font-title)', fontSize: 'var(--text-xl)', color: 'var(--wx-cyan)', margin: 0, letterSpacing: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Package size={18} />
             仓库
           </h2>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 2, background: 'transparent', border: 'none', color: 'var(--dz-text)', cursor: 'pointer', fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-        </div>
-        <div style={{ position: 'relative', zIndex: 1, flex: 1, overflow: 'auto', padding: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '8px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--dz-gray-light)', clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)' }}>
-            <Package size={14} style={{ color: 'var(--dz-gold)' }} />
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--dz-text-dim)' }}>仓库可存放多余物品，不占背囊空间。</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>存放多余物品</span>
+            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: 'none', border: 'none', color: 'var(--wx-ink-dim)', cursor: 'pointer', fontSize: 20 }}>×</button>
           </div>
+        </div>
+        <div style={{ zIndex: 1, flex: 1, overflow: 'auto', padding: 16 }}>
           {keys.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 36, fontFamily: 'var(--font-serif)' }}>
-              <div style={{ fontSize: 15, color: 'var(--dz-text-dim)', marginBottom: 8 }}>仓库空空</div>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--dz-text-dim)', opacity: 0.7 }}>可将背囊中暂时不用的物品存入仓库。</div>
+            <div style={{ textAlign: 'center', padding: 60 }}>
+              <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.3 }}>🏚</div>
+              <div style={{ fontFamily: 'var(--font-title)', fontSize: 'var(--text-lg)', color: 'var(--wx-ink-dim)', marginBottom: 8 }}>仓库空空</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', opacity: 0.6 }}>可将背囊中暂时不用的物品存入仓库</div>
             </div>
           ) : (
-            <div className="dz-items-side">
-              <div className="dz-items-list">
-                {keys.map(k => (
-                  <div key={k} className={`dz-item-row ${k === sel ? 'sel' : ''}`} onClick={() => setSel(k)}>
-                    <span>{k}</span>
-                    <span style={{ color: 'var(--dz-text-dim)', fontSize: 11 }}>×{items[k]?.['数量'] || items[k]?.quantity || 1}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+              {keys.map(k => {
+                const data = items[k];
+                const type = data['物品类型'] || data.type || '杂物';
+                return (
+                  <div key={k} onClick={() => setSel(k === sel ? null : k)} style={{
+                    padding: '14px 10px', cursor: 'pointer', textAlign: 'center',
+                    background: k === sel ? 'rgba(90,140,160,0.1)' : 'var(--wx-card)',
+                    border: `1px solid ${k === sel ? 'rgba(90,140,160,0.3)' : 'var(--bdr-subtle)'}`,
+                    borderRadius: 'var(--rd-md)', boxShadow: 'var(--sh-sm)', position: 'relative',
+                  }}>
+                    <div style={{ fontSize: 28, marginBottom: 6 }}>{TYPE_ICONS[type] || '📦'}</div>
+                    <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--wx-ink)', lineHeight: 1.3 }}>{k}</div>
+                    <div style={{ position: 'absolute', top: 6, right: 8, fontSize: 9, color: 'var(--wx-ink-dim)' }}>{type}</div>
                   </div>
-                ))}
-              </div>
-              {item && (
-                <div className="dz-item-detail">
-                  <div className="dz-item-name">{sel}</div>
-                  <div className="dz-item-type">{item['物品类型'] || item.type || '杂物'}</div>
-                  <div className="dz-item-desc">{item['物品描述'] || item.description || '暂无描述'}</div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                    <button className="dz-btn dz-btn-red" onClick={() => { onSend(`从仓库中取出【${sel}】放回背囊。`); onClose(); }}>取回背囊</button>
-                    <button className="dz-btn dz-btn-outline" onClick={() => { onSend(`丢弃仓库中的【${sel}】。`); onClose(); }}>丢弃</button>
-                  </div>
-                </div>
-              )}
+                );
+              })}
             </div>
           )}
         </div>
-        <div style={{ position: 'relative', zIndex: 1, height: 3, flexShrink: 0, background: 'linear-gradient(90deg, var(--dz-red), var(--dz-gold), var(--dz-red))' }} />
+        {item && (
+          <div style={{ zIndex: 1, borderTop: '1px solid var(--bdr-subtle)', padding: '14px 20px', background: 'var(--wx-card)', display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--font-title)', fontSize: 'var(--text-base)', color: 'var(--wx-ink)', marginBottom: 4 }}>{sel}</div>
+              <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', lineHeight: 1.5 }}>{item['物品描述'] || item.description || '暂无描述'}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`丢弃仓库中的【${sel}】。`); onClose(); }}>丢弃</button>
+              <button className="wx-btn wx-btn-red" style={{ padding: '6px 16px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`从仓库中取出【${sel}】放回背囊。`); onClose(); }}>取回背囊</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
