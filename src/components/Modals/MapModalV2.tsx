@@ -389,15 +389,44 @@ const LOCATIONS: LocData[] = [
 ];
 
 // Routes
-const ROUTES: { path: [number, number][]; color: string; dash: string; weight: number; label: string }[] = [
-  { path: [[34.62, 112.45], [34.80, 114.35], [32.04, 112.14], [32.06, 118.80], [24.87, 118.68]], color: '#5a7a4a', dash: '8,6', weight: 1.5, label: '大运河-长江漕运' },
-  { path: [[34.26, 108.94], [37.93, 102.64], [40.14, 94.66], [42.95, 89.19], [36, 70]], color: '#8a7a4a', dash: '10,6', weight: 1.5, label: '丝绸之路' },
-  { path: [[34.62, 112.45], [34.26, 108.94], [37.93, 102.64]], color: '#8a7a4a', dash: '10,6', weight: 1.5, label: '丝路东段' },
-  { path: [[32.06, 118.80], [37.80, 120.75], [39.91, 116.40]], color: '#4a6a6a', dash: '5,7', weight: 1, label: '沿海航线' },
-  { path: [[23.13, 113.26], [24.87, 118.68], [32.06, 118.80]], color: '#4a6a6a', dash: '5,7', weight: 1, label: '南洋航线' },
-  { path: [[34.62, 112.45], [37.87, 112.55], [39.91, 116.40]], color: '#6a5a3a', dash: '6,5', weight: 1.2, label: '北上官道' },
-  { path: [[34.26, 108.94], [33.95, 108.95], [30.57, 104.07], [28.50, 104.50]], color: '#6a5a3a', dash: '6,5', weight: 1.2, label: '蜀道' },
-  { path: [[23.13, 113.26], [-3.0, 104.7], [2.2, 102.2]], color: '#4a6a6a', dash: '5,7', weight: 1, label: '西洋航线' },
+const ROUTES: { path: [number, number][]; color: string; dash: string; weight: number; label: string; desc: string }[] = [
+  // ═══ 大周境内 ═══
+  { path: [[34.62,112.45],[34.80,114.35],[32.04,112.14],[32.06,118.80],[24.87,118.68]], color: '#5a7a4a', dash: '8,6', weight: 2, label: '大运河-长江漕运',
+    desc: '大周生命线。北起洛阳，经开封、襄阳，南抵金陵、泉州。每年数百万石漕粮由此北运，沿途设水驿六十四处。谢氏商帮控制漕运七成运力。' },
+  { path: [[34.62,112.45],[37.87,112.55],[39.91,116.40]], color: '#6a5a3a', dash: '6,5', weight: 1.5, label: '北上官道',
+    desc: '洛阳→晋阳→幽州。太行八陉锁钥，沿途设驿三十处。战时军报六百里加急由此线传递。晋商与幽州商帮经此线往来贸易。' },
+  { path: [[34.26,108.94],[33.95,108.95],[30.57,104.07],[28.50,104.50]], color: '#6a5a3a', dash: '6,5', weight: 1.5, label: '蜀道（金牛道）',
+    desc: '关中→巴蜀。剑门关一夫当关万夫莫开。蜀道之难，难于上青天。巴蜀物资经此线北上关中，蜀锦、井盐为大宗。' },
+  { path: [[32.06,118.80],[37.80,120.75],[39.91,116.40]], color: '#4a6a6a', dash: '5,7', weight: 1.2, label: '东部沿海航线',
+    desc: '金陵→登州→幽州。沿海福船穿梭不息。登州港为北方最大出海港，幽州为海陆转运枢纽。巨蛟帮盘踞沿线岛屿。' },
+  { path: [[34.62,112.45],[34.26,108.94],[37.93,102.64],[40.14,94.66],[42.95,89.19]], color: '#5a6a3a', dash: '8,6', weight: 1.5, label: '陇右驿道',
+    desc: '洛阳→长安→凉州→敦煌→高昌。关中至西域的主干道。沿途设烽燧与驿马，商队络绎不绝。蓝听雪的互市走马司掌控此线。' },
+
+  // ═══ 丝绸之路 ═══
+  { path: [[34.26,108.94],[37.93,102.64],[40.14,94.66],[42.95,89.19],[36,70],[34,60],[38,45]], color: '#c8a060', dash: '10,6', weight: 2, label: '丝绸之路（全线）',
+    desc: '长安→凉州→敦煌→高昌→大食→波斯→拂菻。横跨万里的东西方贸易大动脉。丝绸、瓷器、香料、珠宝、玻璃器皿在此流转。粟特商人是丝路的主力商队，阿米娜的金沙商会掌控波斯段，央金的茶马商队连接吐蕃。' },
+
+  // ═══ 海上丝绸之路 ═══
+  { path: [[23.13,113.26],[24.87,118.68],[2.2,102.2],[-3.0,104.7],[-7.5,112.5]], color: '#5a8a9a', dash: '6,8', weight: 2, label: '海上丝绸之路（南洋段）',
+    desc: '广州→泉州→马六甲→三佛齐→满者伯夷。南洋香料、象牙、珍珠从此线北上，大周丝绸、瓷器南下。金若水的万国商会与莎雅女王的香料帝国在此博弈。陈祖义与红姑的海盗势力盘踞马六甲。' },
+  { path: [[23.13,113.26],[-3.0,104.7],[-7.5,112.5],[2.2,102.2],[15,70],[30,35],[34,25],[51.5,-0.1]], color: '#7a9aba', dash: '6,10', weight: 1.5, label: '西洋航线（至英吉利）',
+    desc: '广州→三佛齐→天竺→大食→地中海→英吉利。十五世纪前最长的远洋航线。夏洛特的东印度公司正探索此线以绕开波斯与阿拉伯中间商。' },
+
+  // ═══ 海外朝贡/遣使路线 ═══
+  { path: [[34.62,112.45],[32.06,118.80],[37.80,120.75],[35.0,135.8]], color: '#e89888', dash: '6,6', weight: 1.3, label: '遣周使航线（东瀛）',
+    desc: '洛阳→金陵→登州→京都。东瀛遣周使往返大周的官方航线。藤原香子常驻洛阳负责外交事务，柳生雪姬曾随遣周使团访周挑战天剑阁。' },
+  { path: [[34.62,112.45],[39.91,116.40],[37.9,126.6]], color: '#c8a8e8', dash: '6,6', weight: 1.3, label: '高丽朝贡路线',
+    desc: '洛阳→幽州→开城。高丽每年遣使朝贡。李明月曾为大周质子往返此线，朴贞熙的东海商会控制沿线海上贸易。' },
+  { path: [[42.95,89.19],[29.6,91.1]], color: '#b8a868', dash: '8,4', weight: 1.3, label: '吐蕃-西域商道',
+    desc: '高昌→逻些。穿越昆仑山口的险峻商路。央金的茶马商队常年往返此线，以茶叶与骏马互市。吐蕃铁骑亦沿此线威胁西域。' },
+  { path: [[29.6,91.1],[28.2,85.0],[27,85],[30,78]], color: '#a8b868', dash: '5,5', weight: 1, label: '吐蕃-天竺朝圣道',
+    desc: '逻些→匹播→泥婆罗→天竺。僧侣与朝圣者往来不绝。莲花生大师经此线从天竺入藏传播密宗佛法。' },
+  { path: [[34,60],[42.95,89.19],[34.26,108.94],[34.62,112.45]], color: '#e8c868', dash: '8,4', weight: 1.3, label: '波斯-大周使节路',
+    desc: '波斯→高昌→长安→洛阳。波斯流亡政府与大周的外交通道。巴赫拉姆常年往返此线，希林公主的复国求援经此传递。萨拉与天山明教赫连城的教义交流亦沿此线。' },
+
+  // ═══ 草原与北疆 ═══
+  { path: [[42.00,112.00],[52,100],[55,108]], color: '#8a9ab8', dash: '6,4', weight: 1.2, label: '草原游牧路线',
+    desc: '受降城→北狄→漠北。游牧部落季节性迁徙的路线。安北都护府在此线设烽燧监视草原。太行阴契的秘密交易亦沿此线进行。' },
 ];
 
 // Faction lines
@@ -421,7 +450,12 @@ export function MapModal({ isOpen, onClose, onSend }: Props) {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
     const tp = map.getPane('tilePane'); if (tp) tp.style.filter = 'brightness(0.4) saturate(0.25) sepia(0.5) contrast(1.1)';
 
-    ROUTES.forEach(r => L.polyline(r.path, { color: r.color, weight: r.weight, opacity: 0.45, dashArray: r.dash }).addTo(map));
+    ROUTES.forEach(r => {
+      const line = L.polyline(r.path, { color: r.color, weight: r.weight, opacity: 0.5, dashArray: r.dash, className: 'dz-route-line' }).addTo(map);
+      line.bindPopup(`<div style="font-family:'Noto Serif SC',serif;font-size:13px;line-height:1.7;color:#d4c5a0;max-width:280px;"><div style="font-size:16px;font-weight:700;color:#f0e0b0;border-bottom:1px solid #5a4a30;padding-bottom:6px;margin-bottom:8px;letter-spacing:2px;">${r.label}</div><div style="font-size:12px;color:#a09070;line-height:1.8;">${r.desc}</div></div>`, { maxWidth: 300 });
+      line.on('mouseover', function() { line.setStyle({ weight: r.weight * 2.5, opacity: 0.8 }); });
+      line.on('mouseout', function() { line.setStyle({ weight: r.weight, opacity: 0.5 }); });
+    });
     FACTION_LINES.forEach(f => L.polyline([f.from, f.to], { color: f.color, weight: 1.2, opacity: 0.4, dashArray: f.dash }).addTo(map));
 
     const mk = (c: string, s: number) => L.divIcon({ className: '', html: `<div style="width:${s}px;height:${s}px;background:${c};border-radius:50%;border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 10px ${c}90;"></div>`, iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
