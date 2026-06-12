@@ -48,9 +48,9 @@ function App() {
   if (showWelcome) {
     return (
       <WelcomePage
-        onNewGame={async () => { setShowWelcome(false); }}
-        onLoadGame={() => { setShowArchive(true); setShowWelcome(false); }}
-        onSettings={() => { setShowSettings(true); setShowWelcome(false); }}
+        onNewGame={() => { setShowWelcome(false); }}
+        onLoadGame={() => { setShowArchive(true); }}
+        onSettings={() => { setShowSettings(true); }}
         onChangelog={() => {}}
       />
     );
@@ -83,7 +83,7 @@ function App() {
         <StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
 
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-        {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} />}
+        {showArchive && <ArchiveModal onClose={() => { setShowArchive(false); setShowWelcome(false); }} />}
       </div>
     </NotificationCenter>
   );
