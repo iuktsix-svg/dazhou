@@ -250,7 +250,58 @@ export function useSillytavern() {
 
       // Extract variables from reply
       const { cleanedText: reply, updates: extractedVars } = extractVariables(rawReply);
-      const nextVariables = mergeVariables(currentVariables, extractedVars);
+      let nextVariables = mergeVariables(currentVariables, extractedVars);
+
+      // ---- Secondary API: validate/process variables ----
+      if (settings.api.secondary?.enabled && Object.keys(extractedVars).length > 0) {
+        try {
+          const varApiCfg = resolveApiConfig('variables', settings.api);
+          const varBody = {
+            model: varApiCfg.model,
+            messages: [
+              { role: 'system', content: '你是一个变量校验系统。根据当前的变量状态和剧情变化，校验并返回更新后的变量。以 JSON 格式回复：{"variables": {"key": value, ...}}。只修改需要变更的变量。' },
+              { role: 'user', content: `当前变量：${JSON.stringify(currentVariables)}\n剧情更新：${rawReply.slice(0, 2000)}\n提取到的变量变更：${JSON.stringify(extractedVars)}\n请校验并返回最终变量状态。` },
+            ],
+            temperature: 0.1, max_tokens: 1000,
+          };
+          const varReply = await chatCompletions(varApiCfg.baseUrl, varApiCfg.apiKey, varBody, abortRef.current?.signal);
+          try {
+            const jsonMatch = varReply.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const validated = JSON.parse(jsonMatch[0]);
+              if (validated.variables) {
+                nextVariables = mergeVariables(nextVariables, validated.variables);
+              }
+            }
+          } catch { /* JSON parse failed, keep extracted vars */ }
+        } catch { /* secondary API failed, keep extracted vars */ }
+      }
+
+      // ---- Memory API: compress long conversations ----
+      let finalMessages = [...updatedChat.messages];
+      if (settings.api.memory?.enabled && finalMessages.length > 16) {
+        try {
+          const memApiCfg = resolveApiConfig('memory', settings.api);
+          const historySummary = finalMessages.slice(0, -8).map(m => `${m.role}: ${m.content.slice(0, 200)}`).join('\n');
+          const memBody = {
+            model: memApiCfg.model,
+            messages: [
+              { role: 'system', content: '你是一个记忆压缩系统。将以下对话历史压缩为一段简洁的叙事总结，保留关键事件、人物关系和变量变化。200字以内。' },
+              { role: 'user', content: historySummary },
+            ],
+            temperature: 0.3, max_tokens: 500,
+          };
+          const memReply = await chatCompletions(memApiCfg.baseUrl, memApiCfg.apiKey, memBody, abortRef.current?.signal);
+          // Insert memory summary as system message
+          const memMsg: ChatMessage = {
+            id: crypto.randomUUID(), role: 'system',
+            content: `[记忆摘要] ${memReply}`,
+            timestamp: Date.now(), variables: {},
+          };
+          const recentMsgs = finalMessages.slice(-8);
+          finalMessages = [memMsg, ...recentMsgs];
+        } catch { /* memory API failed, keep full history */ }
+      }
 
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
@@ -262,7 +313,7 @@ export function useSillytavern() {
 
       updatedChat = {
         ...updatedChat,
-        messages: [...updatedChat.messages, assistantMessage],
+        messages: [...finalMessages, assistantMessage],
         variables: nextVariables,
       };
       await saveChat(updatedChat);
