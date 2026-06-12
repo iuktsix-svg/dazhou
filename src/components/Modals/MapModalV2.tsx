@@ -455,10 +455,25 @@ export function MapModal({ isOpen, onClose, onSend }: Props) {
     const tp = map.getPane('tilePane'); if (tp) tp.style.filter = 'brightness(0.4) saturate(0.25) sepia(0.5) contrast(1.1)';
 
     ROUTES.forEach(r => {
-      const line = L.polyline(r.path, { color: r.color, weight: r.weight, opacity: 0.5, dashArray: r.dash, className: 'dz-route-line' }).addTo(map);
-      line.bindPopup(`<div style="font-family:'Noto Serif SC',serif;font-size:13px;line-height:1.7;color:#d4c5a0;max-width:280px;"><div style="font-size:16px;font-weight:700;color:#f0e0b0;border-bottom:1px solid #5a4a30;padding-bottom:6px;margin-bottom:8px;letter-spacing:2px;">${r.label}</div><div style="font-size:12px;color:#a09070;line-height:1.8;">${r.desc}</div></div>`, { maxWidth: 300 });
-      line.on('mouseover', function() { line.setStyle({ weight: r.weight * 2.5, opacity: 0.8 }); });
-      line.on('mouseout', function() { line.setStyle({ weight: r.weight, opacity: 0.5 }); });
+      // Invisible wide buffer line for easier clicking
+      const buffer = L.polyline(r.path, { color: 'transparent', weight: 12, opacity: 0, interactive: true }).addTo(map);
+      // Visible route line
+      const line = L.polyline(r.path, { color: r.color, weight: r.weight, opacity: 0.55, dashArray: r.dash, interactive: false }).addTo(map);
+      // Clickable dot markers at waypoints
+      const waypointDots: L.CircleMarker[] = [];
+      r.path.forEach(([lat, lng]) => {
+        const dot = L.circleMarker([lat, lng], { radius: 4, color: r.color, fillColor: r.color, fillOpacity: 0.6, weight: 1, interactive: true }).addTo(map);
+        waypointDots.push(dot);
+      });
+      // Shared popup
+      const popupContent = `<div style="font-family:'Noto Serif SC',serif;font-size:13px;line-height:1.7;color:#d4c5a0;max-width:280px;"><div style="font-size:16px;font-weight:700;color:#f0e0b0;border-bottom:1px solid #5a4a30;padding-bottom:6px;margin-bottom:8px;letter-spacing:2px;">${r.label}</div><div style="font-size:12px;color:#a09070;line-height:1.8;">${r.desc}</div></div>`;
+      const popup = L.popup({ maxWidth: 300 }).setContent(popupContent);
+      // Click on buffer or any waypoint dot
+      buffer.on('click', (e) => { popup.setLatLng(e.latlng).openOn(map); });
+      waypointDots.forEach(dot => dot.on('click', (e) => { popup.setLatLng(e.latlng).openOn(map); }));
+      // Hover effects
+      buffer.on('mouseover', () => { line.setStyle({ weight: r.weight * 3, opacity: 0.9 }); waypointDots.forEach(d => d.setStyle({ radius: 6, fillOpacity: 1 })); });
+      buffer.on('mouseout', () => { line.setStyle({ weight: r.weight, opacity: 0.55 }); waypointDots.forEach(d => d.setStyle({ radius: 4, fillOpacity: 0.6 })); });
     });
     FACTION_LINES.forEach(f => L.polyline([f.from, f.to], { color: f.color, weight: 1.2, opacity: 0.4, dashArray: f.dash }).addTo(map));
 
