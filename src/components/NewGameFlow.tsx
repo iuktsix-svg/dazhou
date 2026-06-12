@@ -29,7 +29,7 @@ const INTRO_TEXT = [
 ];
 
 export function NewGameFlow({ onStart }: Props) {
-  const { createChat, sendMessage, isLoading } = useSillytavern();
+  const { createChat, sendMessage, setChatMessages, isLoading } = useSillytavern();
   const [step, setStep] = useState<Step>('intro');
   const [introLine, setIntroLine] = useState(0);
   const [gender, setGender] = useState<'男' | '女' | '其他'>('男');
@@ -56,17 +56,17 @@ export function NewGameFlow({ onStart }: Props) {
           // Display text: replace {主角} and {{user}} with player desc
           const playerDesc = name.trim() || (gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客');
           const displayText = pendingOpening.text.replace(/\{主角\}/g, playerDesc).replace(/\{\{user\}\}/g, playerDesc);
-          // AI prompt: player info for AI to start generating
-          const aiPrompt = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}\n\n请根据以下开场背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态(健康)、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`;
-          chat.messages = [
-            { id: crypto.randomUUID(), role: 'user', content: displayText, timestamp: Date.now(), variables: {} },
-            // AI prompt as system message — hidden from story display, triggers AI
-            { id: crypto.randomUUID(), role: 'system', content: aiPrompt, timestamp: Date.now() + 1, variables: {} },
-          ];
+          // Construct the first user message: player info (hidden) + opening story (visible)
+          // The opening story IS the user's first "message" to the AI.
+          const playerInfo = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}`;
+          // Let sendMessage create the user message — don't pre-add it
+          chat.messages = [];
           chat.updatedAt = Date.now();
           await saveChat(chat);
-          // Send the AI prompt to trigger generation
-          try { sendMessage(aiPrompt); } catch {}
+          setChatMessages(cid, []);
+          // Trigger AI: displayText is the opening scene the player chose.
+          // Player info is prepended so the AI sees it, but the main visible content is the story.
+          try { sendMessage(`${playerInfo}\n\n<开场背景>\n${displayText}\n</开场背景>`, cid); } catch {}
         }
       }
       onStart();

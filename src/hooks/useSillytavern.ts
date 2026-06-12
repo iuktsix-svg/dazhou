@@ -39,6 +39,10 @@ export function useSillytavern() {
     [chats, activeChatId],
   );
 
+  // Ref that always mirrors latest chats — used by sendMessage to avoid stale closure
+  const chatsRef = useRef(chats);
+  chatsRef.current = chats;
+
   const abortRef = useRef<AbortController | null>(null);
 
   // ---- Init ----
@@ -164,6 +168,11 @@ export function useSillytavern() {
     }
   }, [activeChatId]);
 
+  // ---- Direct state update (for NewGameFlow after DB write) ----
+  const setChatMessages = useCallback((chatId: string, messages: ChatMessage[]) => {
+    setChats(prev => prev.map(c => c.id === chatId ? { ...c, messages, updatedAt: Date.now() } : c));
+  }, []);
+
   // ---- Variables ----
   const updateVariables = useCallback(async (updates: Record<string, string | number>) => {
     if (!activeChat) return;
@@ -174,8 +183,13 @@ export function useSillytavern() {
   }, [activeChat]);
 
   // ---- Send Message (core) ----
-  const sendMessage = useCallback(async (content: string) => {
-    if (!settings || !activeChat) {
+  const sendMessage = useCallback(async (content: string, optChatId?: string) => {
+    // Resolve target chat: prefer optChatId (from createChat in same tick), fall back to activeChat
+    const targetChat = optChatId
+      ? (chatsRef.current.find(c => c.id === optChatId) || activeChat)
+      : activeChat;
+
+    if (!settings || !targetChat) {
       throw new Error('No active chat or settings not loaded');
     }
 
@@ -193,7 +207,7 @@ export function useSillytavern() {
       if (!activePreset) throw new Error('没有可用的预设，请先创建一个预设。');
 
       const activeBooks = lorebooks.filter(b => activeLorebookIds.includes(b.id));
-      const currentVariables = activeChat.variables || {};
+      const currentVariables = targetChat.variables || {};
 
       // Add user message
       const userMessage: ChatMessage = {
@@ -204,8 +218,8 @@ export function useSillytavern() {
         variables: { ...currentVariables },
       };
 
-      const updatedMessages = [...activeChat.messages, userMessage];
-      let updatedChat = { ...activeChat, messages: updatedMessages, updatedAt: Date.now() };
+      const updatedMessages = [...targetChat.messages, userMessage];
+      let updatedChat = { ...targetChat, messages: updatedMessages, updatedAt: Date.now() };
 
       // Assemble prompt
       const { messages: promptMessages } = assemblePrompt({
@@ -434,6 +448,7 @@ export function useSillytavern() {
     createChat,
     loadChat,
     deleteChat,
+    setChatMessages,
     sendMessage,
     cancelGeneration,
     updateVariables,
