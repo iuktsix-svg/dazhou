@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useSillytavern } from '../hooks/useSillytavern';
 import { Archive, Plus, Trash2, MessageSquare } from 'lucide-react';
 
-interface Props { onClose: () => void; }
+interface Props { onClose: () => void; onEnterGame: () => void; }
 
-export function ArchiveModal({ onClose }: Props) {
+export function ArchiveModal({ onClose, onEnterGame }: Props) {
   const { chats, createChat, loadChat, deleteChat, activeChatId } = useSillytavern();
   const [newName, setNewName] = useState('');
 
@@ -55,7 +55,7 @@ export function ArchiveModal({ onClose }: Props) {
                     borderRadius: 'var(--rd-md)', cursor: 'pointer', transition: 'all 0.15s',
                   }}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }} onClick={() => { loadChat(chat.id); onClose(); }}>
+                  <div style={{ flex: 1, minWidth: 0 }} onClick={() => { loadChat(chat.id); onEnterGame(); }}>
                     <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--wx-ink)', fontSize: 'var(--text-base)', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <MessageSquare size={14} style={{ color: 'var(--wx-vermillion)' }} />
                       {chat.name}

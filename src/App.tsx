@@ -83,7 +83,7 @@ function App() {
         <StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
 
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-        {showArchive && <ArchiveModal onClose={() => { setShowArchive(false); setShowWelcome(false); }} />}
+        {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
       </div>
     </NotificationCenter>
   );
