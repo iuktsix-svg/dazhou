@@ -78,7 +78,16 @@ export function useSillytavern() {
       c = [demoChat];
       setActiveChatId(demoChat.id);
     }
-    setChats(c);
+    // If we created a demo, inject its data into the state-synced chat
+    if (c.length > 0 && c[0].variables && typeof (c[0].variables as Record<string,unknown>)['主角状态'] === 'object') {
+      // Ensure the chat in state has the full nested data
+      const syncedChat = { ...c[0], variables: JSON.parse(JSON.stringify(c[0].variables)) };
+      setChats([syncedChat, ...c.slice(1)]);
+      setActiveChatId(syncedChat.id);
+      console.log('[demo] synced chat with', Object.keys(syncedChat.variables).length, 'root keys, 主角状态:', Object.keys((syncedChat.variables as Record<string,unknown>)['主角状态'] as object || {}));
+    } else {
+      setChats(c);
+    }
     setIsLoading(false);
   }, []);
 
