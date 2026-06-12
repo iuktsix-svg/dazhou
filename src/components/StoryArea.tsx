@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { type ChatMessage, ASSISTANT_ROLE } from '../sillytavern';
-import { useSillytavern } from '../hooks/useSillytavern';
-import { Plus } from 'lucide-react';
 
 interface Props { messages: ChatMessage[]; streamingText: string; isStreaming: boolean; onOption: (text: string) => void; }
 
@@ -24,87 +22,79 @@ function parseBlocks(text: string) {
   return blocks.length > 0 ? blocks : [{ type: 'narration' as const, text }];
 }
 
+const DEMO_TEXT = `<maintext>
+午休的教室只有我们两个人。
+
+蛋蛋趴在桌上，脸朝着我的方向，指尖无意识地卷着发尾。阳光从她背后的窗户斜斜地照进来，把她的睫毛在脸颊上投下一小片阴影。
+
+她好像有话要说。或者只是在看我。又或者说，她只是在发呆。
+
+你注意到她的耳朵有点红。
+
+"......"她轻轻吸了一口气，"你中午......要不要和我一起吃午饭？"
+
+她垂下眼睛，声音很轻，但每个字都很清楚。
+</maintext>
+<option>
+1.你决定接受她的邀请。
+2.你婉拒了。
+3.你拒绝并嘲笑她痴心妄想
+4.时间来到午餐结束后。
+</option>`;
+
 export function StoryArea({ messages, streamingText, isStreaming, onOption }: Props) {
-  const { createChat } = useSillytavern();
-  const [info, setInfo] = useState({ time: '--', location: '--' });
-
-  useEffect(() => {
-    const iv = setInterval(() => { /* reserved for future live updates */ }, 2000);
-    return () => clearInterval(iv);
-  }, []);
-
-  // Try to get time/location from the last message's variables
-  useEffect(() => {
-    const lastMsg = messages.find(m => m.role === ASSISTANT_ROLE && m.variables);
-    if (lastMsg?.variables) {
-      const v = lastMsg.variables as Record<string, unknown>;
-      const p = (v['主角状态'] || {}) as Record<string, unknown>;
-      setInfo({
-        time: String(v['当前时辰'] || '--'),
-        location: String(p['当前所在地点'] || v['当前所在地点'] || '--'),
-      });
-    }
-  }, [messages]);
+  const [info] = useState({ time: '午时三刻', location: '大周·洛阳·平康坊' });
 
   const last = [...messages].reverse().find(m => m.role === ASSISTANT_ROLE);
-  const text = (isStreaming && streamingText) ? streamingText : (last?.content || '');
-  const blocks = parseBlocks(text);
-  const w3g = text.match(/<w3g>([\s\S]*?)<\/w3g>/i);
-  const options = w3g ? w3g[1].trim().split(/\r?\n/).map(l => l.trim().replace(/^\d+\.\s*/, '')).filter(Boolean) : [];
+  const rawText = (isStreaming && streamingText) ? streamingText : (last?.content || DEMO_TEXT);
+
+  // Strip tags for clean display
+  const cleanText = rawText
+    .replace(/<maintext>/gi, '').replace(/<\/maintext>/gi, '')
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+    .replace(/<sum>[\s\S]*?<\/sum>/gi, '')
+    .replace(/<vars>[\s\S]*?<\/vars>/gi, '');
+
+  const blocks = parseBlocks(cleanText);
+
+  // Extract options from <option> or <w3g> tags
+  const optMatch = rawText.match(/<option>([\s\S]*?)<\/option>/i);
+  const w3gMatch = !optMatch ? rawText.match(/<w3g>([\s\S]*?)<\/w3g>/i) : null;
+  const optRaw = optMatch ? optMatch[1] : (w3gMatch ? w3gMatch[1] : '');
+  const options = optRaw
+    ? optRaw.trim().split(/\r?\n/).map((l: string) => l.trim().replace(/^\d+\.\s*/, '')).filter(Boolean)
+    : [];
 
   const hasContent = messages.length > 0;
 
   return (
     <div className="dz-story">
       <div className="dz-story-inner">
-        {!hasContent ? (
-          <div className="dz-story-empty">
-            <h1>大周日暮录</h1>
-            <p style={{ marginBottom: 20 }}>尚未开始江湖之旅</p>
-            <button
-              onClick={() => createChat()}
-              style={{
-                padding: '12px 28px', background: 'var(--dz-red)', color: '#fff', border: 'none', cursor: 'pointer',
-                fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, letterSpacing: 1,
-                clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)',
-                boxShadow: '4px 4px 0px rgba(197,48,48,0.35)',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--dz-red-light)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'var(--dz-red)'}
-            >
-              <Plus size={16} /> 创建新对话
-            </button>
+        {!hasContent && !isStreaming && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28,
+            paddingBottom: 16, borderBottom: '1px solid var(--bdr-subtle)',
+            fontFamily: 'var(--font-body)',
+          }}>
+            <span style={{ fontSize: 'var(--text-lg)', color: 'var(--wx-gold)', fontWeight: 600 }}>{info.time}</span>
+            <span style={{ color: 'var(--wx-ink-dim)', fontSize: 'var(--text-base)' }}>·</span>
+            <span style={{ fontSize: 'var(--text-base)', color: 'var(--wx-ink)' }}>{info.location}</span>
+          </div>
+        )}
+
+        {blocks.map((b, i) => b.type === 'npc' ? (
+          <div key={i} className="dz-bubble">
+            {b.name && <div className="dz-bubble-label">{b.name}</div>}
+            <div className="dz-bubble-text">{b.text}</div>
           </div>
         ) : (
-          <>
-            {/* Time + Location header */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 16, marginBottom: 28,
-              paddingBottom: 16, borderBottom: '1px solid var(--dz-gray-light)',
-              fontFamily: 'var(--font-serif)',
-            }}>
-              <span style={{ fontSize: 18, color: 'var(--dz-gold)', fontWeight: 600 }}>{info.time}</span>
-              <span style={{ color: 'var(--dz-text-dim)', fontSize: 16 }}>·</span>
-              <span style={{ fontSize: 16, color: 'var(--dz-text)' }}>{info.location}</span>
-            </div>
-
-            {blocks.map((b, i) => b.type === 'npc' ? (
-              <div key={i} className="dz-bubble">
-                {b.name && <div className="dz-bubble-label">{b.name}</div>}
-                <div className="dz-bubble-text">{b.text}</div>
-              </div>
-            ) : (
-              <div key={i} className="dz-narration">{b.text}</div>
-            ))}
-          </>
-        )}
+          <div key={i} className="dz-narration">{b.text}</div>
+        ))}
         {isStreaming && streamingText && <span className="dz-cursor" />}
       </div>
       {options.length > 0 && (
         <div className="dz-options">
-          {options.map((opt, i) => (
+          {options.map((opt: string, i: number) => (
             <div key={i} className="dz-option" onClick={() => onOption(opt)}>
               <div className="opt-idx">选项 {i + 1}</div>
               <div className="opt-text">{opt}</div>
