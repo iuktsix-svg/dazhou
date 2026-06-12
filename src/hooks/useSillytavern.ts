@@ -53,22 +53,25 @@ export function useSillytavern() {
     setPresets(p);
     setSettings(s || null);
     setActiveLorebookIds(s?.activeLorebookIds || []);
-    // Auto-create demo chat if none exist
-    if (c.length === 0 && s) {
+    // Auto-create demo chat if none exist OR all chats have no variables
+    const hasData = c.some(chat => chat.variables && Object.keys(chat.variables).length > 5);
+    if (!hasData) {
+      // Clear old empty chats
+      for (const old of c) { try { await deleteChat(old.id); } catch {} }
       const demoChat: ChatSession = {
         id: crypto.randomUUID(),
-        name: `${s.characterName || '侠客'} - 江湖之旅`,
+        name: `${s?.characterName || '侠客'} - 江湖之旅`,
         messages: [],
-        characterName: s.characterName || '侠客',
-        userName: s.userName || '无名',
-        presetId: s.activePresetId || p[0]?.id || null,
-        lorebookIds: [...(s.activeLorebookIds || [])],
+        characterName: s?.characterName || '侠客',
+        userName: s?.userName || '无名',
+        presetId: s?.activePresetId || p[0]?.id || null,
+        lorebookIds: [...(s?.activeLorebookIds || [])],
         variables: DEMO_VARIABLES as Record<string, string | number>,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
       await saveChat(demoChat);
-      c = [demoChat, ...c];
+      c = [demoChat];
       setActiveChatId(demoChat.id);
     }
     setChats(c);
