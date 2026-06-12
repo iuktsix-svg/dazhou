@@ -1,7 +1,6 @@
-import { Settings, User, Users, Newspaper, Trophy, Map } from 'lucide-react';
+import { Settings, Users, Newspaper, Trophy, Map } from 'lucide-react';
 
 const PANEL_BTNS = [
-  { id: 'status' as const, label: '命盘', icon: User },
   { id: 'contacts' as const, label: '人脉', icon: Users },
   { id: 'news' as const, label: '情报', icon: Newspaper },
   { id: 'leaderboard' as const, label: '榜单', icon: Trophy },
@@ -16,18 +15,16 @@ interface Props {
 }
 
 export function SideNav({ onOpenPanel, onOpenSettings }: Props) {
-  const NavBtn = ({ id, label, Icon, onClick }: { id: string; label: string; Icon: typeof Settings; onClick: () => void }) => (
-    <button key={id} className="dz-nav-item" onClick={onClick} title={label}>
-      <Icon className="dz-nav-icon" strokeWidth={1.5} />
-      <span className="dz-nav-label">{label}</span>
-    </button>
-  );
-
   return (
     <nav className="dz-sidenav">
       <div className="dz-logo-wrap"><div className="dz-logo-diamond" /><span className="dz-logo-text">暮</span></div>
 
-      {PANEL_BTNS.map(item => NavBtn({ id: item.id, label: item.label, Icon: item.icon, onClick: () => onOpenPanel(item.id as PanelId) }))}
+      {PANEL_BTNS.map(item => (
+        <button key={item.id} className="dz-nav-item" onClick={() => onOpenPanel(item.id as PanelId)} title={item.label}>
+          <item.icon className="dz-nav-icon" strokeWidth={1.5} />
+          <span className="dz-nav-label">{item.label}</span>
+        </button>
+      ))}
 
       <div style={{ flex: 1 }} />
 
