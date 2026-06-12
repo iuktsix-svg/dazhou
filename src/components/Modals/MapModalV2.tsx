@@ -2,9 +2,6 @@ import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const MAP_IMG = 'https://files.catbox.moe/vkbiee.jpeg';
-const IMG_BOUNDS: L.LatLngBoundsLiteral = [[10, 50], [55, 155]];
-
 interface Props { isOpen: boolean; onClose: () => void; onSend: (text: string) => void; }
 
 export function MapModal({ isOpen, onClose, onSend }: Props) {
@@ -12,15 +9,18 @@ export function MapModal({ isOpen, onClose, onSend }: Props) {
     if (!isOpen) return;
 
     const map = L.map('dz-leaflet-map', {
-      center: [34.5, 108], zoom: 4, minZoom: 3, maxZoom: 8,
+      center: [34.5, 108], zoom: 5, minZoom: 3, maxZoom: 10,
       zoomControl: true, attributionControl: false,
-      crs: L.CRS.EPSG3857,
     });
 
-    // Image overlay as base map
-    const overlay = L.imageOverlay(MAP_IMG, IMG_BOUNDS, { opacity: 1 });
-    overlay.addTo(map);
-    map.fitBounds(IMG_BOUNDS);
+    // Clean light tiles with dark filter
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19,
+    }).addTo(map);
+
+    // Dark filter — subtle sepia + dim for atmosphere
+    const tp = map.getPane('tilePane');
+    if (tp) tp.style.filter = 'brightness(0.35) saturate(0.3) sepia(0.4) contrast(1.2)';
 
     // Marker factory
     const mk = (color: string, size = 10) => L.divIcon({
