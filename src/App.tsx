@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSillytavern } from './hooks/useSillytavern';
+import { useTheme } from './hooks/useTheme';
 import { SideNav } from './components/SideNav';
 import { StoryArea } from './components/StoryArea';
 import { CommandBar } from './components/CommandBar';
@@ -23,6 +24,7 @@ type DrawerType = 'realm' | 'status' | 'martial' | null;
 function App() {
   const { isLoading, activeChat, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError } = useSillytavern();
   const { notify } = useNotify();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [panel, setPanel] = useState<PanelId>(null);
   const [drawer, setDrawer] = useState<DrawerType>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -43,7 +45,7 @@ function App() {
     <NotificationCenter>
       <div className="dz-root">
         <div className="dz-body-row">
-          <SideNav onOpenPanel={openPanel} onOpenSettings={() => setShowSettings(true)} />
+          <SideNav onOpenPanel={openPanel} onOpenSettings={() => setShowSettings(true)} theme={theme} onToggleTheme={toggleTheme} />
 
           <main className="dz-main">
             <StoryArea messages={activeChat?.messages || []} streamingText={streamingText} isStreaming={isSending} onOption={handleSend} />

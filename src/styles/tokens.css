@@ -1,9 +1,10 @@
 /* ============================================================
-   大周日暮录 — 中国传统色谱
-   宣纸 · 墨色 · 朱砂 · 琉璃金 · 翠玉
+   大周日暮录 — 双主题 Design Tokens
+   :root = 日间(宣纸水墨) | [data-theme="dark"] = 夜间(P5R暗黑)
    ============================================================ */
+
+/* ---- 日间主题 (默认) ---- */
 :root {
-  /* Core palette — 宣纸暖白基底 */
   --wx-paper: #F2ECDA;
   --wx-paper-light: #F8F4EA;
   --wx-paper-dark: #E8E0CC;
@@ -11,89 +12,37 @@
   --wx-ink-light: #4A3F30;
   --wx-ink-dim: #8A7E6A;
 
-  /* Surface tones */
   --wx-surface: #F8F4EA;
   --wx-surface-dark: #EBE4D4;
   --wx-card: #FDFAF4;
   --wx-card-hover: #F2ECD8;
 
-  /* Accents */
   --wx-vermillion: #B5281A;
   --wx-vermillion-light: #D44234;
   --wx-vermillion-dim: rgba(181,40,26,0.12);
   --wx-jade: #5A8C6A;
-  --wx-jade-light: #7AB88A;
   --wx-gold: #C8A060;
   --wx-gold-light: #D8B878;
   --wx-gold-dim: rgba(200,160,96,0.15);
   --wx-cyan: #5A8CA0;
   --wx-cyan-light: #7AB0C0;
 
-  /* Status */
   --wx-danger: #B5281A;
   --wx-warning: #C89640;
   --wx-success: #5A8C6A;
   --wx-info: #5A8CA0;
 
-  /* Typography */
-  --font-title: 'Ma Shan Zheng', 'Noto Serif SC', 'STKaiti', 'KaiTi', cursive;
-  --font-body: 'Noto Serif SC', 'STSong', 'SimSun', serif;
-  --font-ui: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-
-  --text-2xs: 0.65rem;
-  --text-xs: 0.75rem;
-  --text-sm: 0.85rem;
-  --text-base: 1rem;
-  --text-lg: 1.2rem;
-  --text-xl: 1.5rem;
-  --text-2xl: 2rem;
-
-  --leading-tight: 1.3;
-  --leading-normal: 1.6;
-  --leading-relaxed: 1.9;
-
-  /* Spacing */
-  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px;
-  --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
-  --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
-
-  /* Radii — soft organic, like ancient book corners */
-  --rd-sm: 3px;
-  --rd-md: 6px;
-  --rd-lg: 10px;
-  --rd-xl: 16px;
-
-  /* Borders */
   --bdr-subtle: 1px solid rgba(44,36,22,0.12);
   --bdr-gold: 1px solid rgba(200,160,96,0.3);
   --bdr-ink: 1px solid rgba(44,36,22,0.2);
 
-  /* Shadows — soft ink wash, not sharp P5R */
   --sh-sm: 0 1px 3px rgba(44,36,22,0.06);
   --sh-md: 0 3px 12px rgba(44,36,22,0.1);
   --sh-lg: 0 6px 24px rgba(44,36,22,0.14);
   --sh-vermillion: 0 0 12px rgba(181,40,26,0.15);
   --sh-gold: 0 0 14px rgba(200,160,96,0.2);
 
-  /* Transitions */
-  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-ink: cubic-bezier(0.25, 0.1, 0.25, 1);
-  --dur-fast: 150ms;
-  --dur-normal: 280ms;
-  --dur-slow: 450ms;
-
-  /* Layout */
-  --nav-w: 88px;
-  --panel-w: 88px;
-  --scroll-max: 780px;
-
-  /* Z-index */
-  --z-base: 1;
-  --z-panel: 50;
-  --z-overlay: 200;
-  --z-modal: 300;
-
-  /* Compatibility aliases — map old P5R tokens to new wx palette */
+  /* Compatibility aliases */
   --dz-red: var(--wx-vermillion);
   --dz-red-dark: #8B1E1E;
   --dz-red-light: var(--wx-vermillion-light);
@@ -122,4 +71,97 @@
   --moon: var(--wx-ink);
   --moon-dim: var(--wx-ink-dim);
   --moon-faint: rgba(44,36,22,0.3);
+}
+
+/* ---- 夜间主题 (P5R 暗黑) ---- */
+[data-theme="dark"] {
+  --wx-paper: #0A0A0C;
+  --wx-paper-light: #121218;
+  --wx-paper-dark: #0D0D12;
+  --wx-ink: #E8E4DC;
+  --wx-ink-light: #B8B4AC;
+  --wx-ink-dim: #6B6575;
+
+  --wx-surface: #121218;
+  --wx-surface-dark: #0D0D12;
+  --wx-card: #1A1A22;
+  --wx-card-hover: #222230;
+
+  --wx-vermillion: #C53030;
+  --wx-vermillion-light: #E05050;
+  --wx-vermillion-dim: rgba(197,48,48,0.12);
+  --wx-gold: #C9A65C;
+  --wx-gold-dim: rgba(201,166,92,0.15);
+  --wx-cyan: #3B82F6;
+  --wx-jade: #22C55E;
+
+  --wx-danger: #C53030;
+  --wx-warning: #D4952A;
+  --wx-success: #22C55E;
+  --wx-info: #3B82F6;
+
+  --bdr-subtle: 1px solid rgba(255,255,255,0.08);
+  --bdr-gold: 1px solid rgba(201,166,92,0.25);
+  --bdr-ink: 1px solid rgba(255,255,255,0.1);
+
+  --sh-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --sh-md: 0 4px 12px rgba(0,0,0,0.5);
+  --sh-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --sh-vermillion: 0 0 16px rgba(197,48,48,0.2);
+  --sh-gold: 0 0 16px rgba(201,166,92,0.2);
+
+  /* Compatibility aliases remapped for dark */
+  --dz-red: #C53030;
+  --dz-red-dark: #8B1E1E;
+  --dz-red-light: #E05050;
+  --dz-black: #0A0A0C;
+  --dz-dark: #121218;
+  --dz-gray: #1A1A22;
+  --dz-gray-light: #2E2E42;
+  --dz-white: #E8E4DC;
+  --dz-white-dark: #B8B4AC;
+  --dz-gold: #C9A65C;
+  --dz-gold-dark: #9B7A38;
+  --dz-blue: #3B82F6;
+  --dz-green: #22C55E;
+  --dz-text: #C8C4BC;
+  --dz-text-dim: #6B6575;
+  --ink-deep: #0A0A0C;
+  --ink-surface: #121218;
+  --ink-border: rgba(255,255,255,0.08);
+  --ink-card: #1A1A22;
+  --ink-hover: #222230;
+  --gold: #C9A65C;
+  --gold-dim: rgba(201,166,92,0.15);
+  --vermillion: #C53030;
+  --vermillion-glow: rgba(197,48,48,0.2);
+  --gold-glow: rgba(201,166,92,0.2);
+  --moon: #E8E4DC;
+  --moon-dim: #6B6575;
+  --moon-faint: rgba(255,255,255,0.1);
+}
+
+/* ---- Shared constants ---- */
+:root {
+  --font-title: 'Ma Shan Zheng', 'Noto Serif SC', 'STKaiti', 'KaiTi', cursive;
+  --font-body: 'Noto Serif SC', 'STSong', 'SimSun', serif;
+  --font-ui: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  --text-2xs: 0.65rem; --text-xs: 0.75rem; --text-sm: 0.85rem;
+  --text-base: 1rem; --text-lg: 1.2rem; --text-xl: 1.5rem; --text-2xl: 2rem;
+
+  --leading-tight: 1.3; --leading-normal: 1.6; --leading-relaxed: 1.9;
+
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  --rd-sm: 3px; --rd-md: 6px; --rd-lg: 10px; --rd-xl: 16px; --rd-full: 9999px;
+
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-ink: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --dur-fast: 150ms; --dur-normal: 280ms; --dur-slow: 450ms;
+
+  --nav-w: 88px; --panel-w: 88px; --scroll-max: 780px;
+
+  --z-base: 1; --z-panel: 50; --z-overlay: 200; --z-modal: 300;
 }

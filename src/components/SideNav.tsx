@@ -1,4 +1,4 @@
-import { Settings, Users, Newspaper, Trophy, Map, Crosshair } from 'lucide-react';
+import { Settings, Users, Newspaper, Trophy, Map, Crosshair, Sun, Moon } from 'lucide-react';
 
 const PANEL_BTNS = [
   { id: 'contacts' as const, label: '人脉', icon: Users },
@@ -13,9 +13,11 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 interface Props {
   onOpenPanel: (panel: PanelId) => void;
   onOpenSettings: () => void;
+  theme: string;
+  onToggleTheme: () => void;
 }
 
-export function SideNav({ onOpenPanel, onOpenSettings }: Props) {
+export function SideNav({ onOpenPanel, onOpenSettings, theme, onToggleTheme }: Props) {
   return (
     <nav className="dz-sidenav">
       <div className="dz-logo-wrap"><div className="dz-logo-diamond" /><span className="dz-logo-text">暮</span></div>
@@ -28,6 +30,11 @@ export function SideNav({ onOpenPanel, onOpenSettings }: Props) {
       ))}
 
       <div style={{ flex: 1 }} />
+
+      <button className="dz-nav-item" onClick={onToggleTheme} title={theme === 'light' ? '切换夜间模式' : '切换日间模式'}>
+        {theme === 'light' ? <Moon className="dz-nav-icon" strokeWidth={1.5} /> : <Sun className="dz-nav-icon" strokeWidth={1.5} />}
+        <span className="dz-nav-label">{theme === 'light' ? '夜间' : '日间'}</span>
+      </button>
 
       <button className="dz-nav-item" onClick={onOpenSettings} title="设置">
         <Settings className="dz-nav-icon" strokeWidth={1.5} />
