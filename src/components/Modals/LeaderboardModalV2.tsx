@@ -20,6 +20,10 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
   const { activeChat, sendMessage } = useSillytavern();
   const [boards, setBoards] = useState<Record<string, Record<string, LbEntry>>>({});
   const [openBook, setOpenBook] = useState<string | null>(null);
+  // Track last-read counts for unread badge
+  const [readCounts, setReadCounts] = useState<Record<string, number>>(() => {
+    try { return JSON.parse(localStorage.getItem('dz-read-counts') || '{}'); } catch { return {}; }
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -27,6 +31,12 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
   }, [isOpen, activeChat]);
 
   if (!isOpen) return null;
+
+  const markRead = (key: string, count: number) => {
+    const next = { ...readCounts, [key]: count };
+    setReadCounts(next);
+    localStorage.setItem('dz-read-counts', JSON.stringify(next));
+  };
 
   // Merge core books with dynamic books, filtering out 追杀/悬赏 related
   const dynamicKeys = Object.keys(boards).filter(k =>
@@ -56,6 +66,10 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
       <div className="dz-modal-box wide" style={{ maxWidth: 660 }} onClick={e => e.stopPropagation()}>
         <div className="dz-modal-head">
           <h2>{openBook ? allBooks.find(b => b.key === openBook)?.label : '武林藏经阁'}</h2>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {openBook && <button onClick={() => { const bk = allBooks.find(b => b.key === openBook); if (bk) markRead(bk.key, Object.keys(boards[bk.key] || {}).length); setOpenBook(null); }} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>}
+            <button className="dz-modal-close-btn" onClick={onClose}>×</button>
+          </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {openBook && <button onClick={() => setOpenBook(null)} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>}
             <button className="dz-modal-close-btn" onClick={onClose}>×</button>
@@ -94,7 +108,7 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
                         key={book.key}
                         whileHover={{ y: -8, scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        onClick={() => setOpenBook(book.key)}
+                        onClick={() => { setOpenBook(book.key); markRead(book.key, count); }}
                         style={{
                           width: book.width, cursor: 'pointer', position: 'relative',
                           display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -134,15 +148,20 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
                             </button>
                           )}
                         </div>
-                        {count > 0 && (
-                          <div style={{
-                            position: 'absolute', top: -8, right: 2,
-                            minWidth: 18, height: 18, borderRadius: 9,
-                            background: 'var(--wx-vermillion)', color: '#fff',
-                            fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontFamily: 'var(--font-body)', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                          }}>{count}</div>
-                        )}
+                        {(() => {
+                          const prev = readCounts[book.key] || 0;
+                          const unread = count - prev;
+                          if (unread <= 0) return null;
+                          return (
+                            <div style={{
+                              position: 'absolute', top: -8, right: 2,
+                              minWidth: 18, height: 18, borderRadius: 9,
+                              background: 'var(--wx-vermillion)', color: '#fff',
+                              fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontFamily: 'var(--font-body)', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                            }}>{unread}</div>
+                          );
+                        })()}
                       </motion.div>
                     );
                   })}
