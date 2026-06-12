@@ -36,8 +36,6 @@ export function NewGameFlow({ onStart }: Props) {
   const [name, setName] = useState('');
   const [pendingOpening, setPendingOpening] = useState<{ text: string; id: number } | null>(null);
 
-  if (isLoading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--wx-paper)', fontFamily: 'var(--font-title)', fontSize: 'var(--text-xl)', color: 'var(--wx-vermillion)' }}>加载中…</div>;
-
   useEffect(() => {
     if (step !== 'intro') return;
     if (introLine >= INTRO_TEXT.length + 2) { setTimeout(() => setStep('character'), 800); return; }
@@ -67,6 +65,8 @@ export function NewGameFlow({ onStart }: Props) {
       onStart();
     })();
   }, [pendingOpening]);
+
+  if (isLoading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--wx-paper)', fontFamily: 'var(--font-title)', fontSize: 'var(--text-xl)', color: 'var(--wx-vermillion)' }}>加载中…</div>;
 
   const handleCustomStart = () => {
     const custom = (document.getElementById('custom-opening-input') as HTMLTextAreaElement)?.value?.trim();
