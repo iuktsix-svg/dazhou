@@ -27,9 +27,9 @@ export function StoryArea({ messages, streamingText, isStreaming, onOption }: Pr
   const stripTags = settings?.stripTags || ['thinking', 'think', 'sum', 'vars'];
 
   const lastAssistant = [...messages].reverse().find(m => m.role === ASSISTANT_ROLE);
-  const lastAny = messages.length > 0 ? messages[messages.length - 1] : null;
-  // Show assistant message if available, otherwise show the user's opening message
-  const rawText = (isStreaming && streamingText) ? streamingText : (lastAssistant?.content || lastAny?.content || '');
+  // Show last non-system message (user or assistant)
+  const lastDisplay = [...messages].reverse().find(m => m.role !== 'system');
+  const rawText = (isStreaming && streamingText) ? streamingText : (lastAssistant?.content || lastDisplay?.content || '');
 
   let cleanText = rawText
     .replace(/<maintext>/gi, '').replace(/<\/maintext>/gi, '')
