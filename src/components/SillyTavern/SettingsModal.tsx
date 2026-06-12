@@ -62,7 +62,6 @@ export function SettingsModal({ onClose }: Props) {
 
   return (
     <div className="dz-modal-shell" onClick={section === 'main' ? onClose : undefined}>
-      <div className="dz-overlay on" style={{ position: 'absolute' }} />
       <div className={`dz-modal-box ${section !== 'main' ? 'wide' : ''}`} onClick={e => e.stopPropagation()}>
         <div className="dz-modal-head">
           <h2>{section === 'main' ? '系统设置' : section === 'api' ? 'API 设置' : '存档管理'}</h2>

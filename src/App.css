@@ -188,11 +188,12 @@
 .dz-modal-shell {
   position: fixed; inset: 0; z-index: var(--z-modal);
   display: flex; justify-content: center; align-items: center; padding: 20px;
+  background: rgba(44,36,22,0.5);
 }
 
 /* Modal box */
 .dz-modal-box {
-  position: relative; width: 100%; max-width: 520px; max-height: 84vh;
+  position: relative; z-index: 1; width: 100%; max-width: 520px; max-height: 84vh;
   background: var(--wx-paper-light); border: 1px solid var(--bdr-ink);
   border-radius: var(--rd-xl); box-shadow: var(--sh-lg);
   display: flex; flex-direction: column; overflow: hidden;

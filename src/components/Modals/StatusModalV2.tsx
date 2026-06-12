@@ -22,7 +22,6 @@ export function StatusModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="dz-modal-shell" onClick={onClose}>
-      <div className="dz-overlay on" style={{ position: 'absolute' }} />
       <div className="dz-modal-box" onClick={e => e.stopPropagation()}>
         <div className="dz-modal-head"><h2>个人命盘</h2><button className="dz-modal-close-btn" onClick={onClose}>×</button></div>
         <div className="dz-modal-body">

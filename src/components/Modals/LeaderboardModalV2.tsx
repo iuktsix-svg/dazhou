@@ -35,7 +35,6 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
 
   return (
     <div className="dz-modal-shell" onClick={onClose}>
-      <div className="dz-overlay on" style={{ position: 'absolute' }} />
       <div className="dz-modal-box wide" style={{ maxWidth: 660 }} onClick={e => e.stopPropagation()}>
         <div className="dz-modal-head">
           <h2>{openBook ? BOOKS.find(b => b.key === openBook)?.label : '武林藏经阁'}</h2>
