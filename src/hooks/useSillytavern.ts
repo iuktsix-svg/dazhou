@@ -19,7 +19,6 @@ import {
   type ChatSession, type ChatMessage, type ParsedBlock,
 } from '../sillytavern';
 import { autoImportLorebooks } from '../lorebooks/auto-import';
-import { DEMO_VARIABLES } from '../data/demoState';
 
 export function useSillytavern() {
   // ---- State ----
@@ -53,41 +52,7 @@ export function useSillytavern() {
     setPresets(p);
     setSettings(s || null);
     setActiveLorebookIds(s?.activeLorebookIds || []);
-    // Auto-create demo chat if no chat has nested demo data
-    const hasDemo = c.some(chat => {
-      const v = chat.variables as Record<string, unknown> || {};
-      return typeof v['主角状态'] === 'object' && typeof v['系统与时辰'] === 'object';
-    });
-    console.log('[demo] hasDemo:', hasDemo, 'chats:', c.length);
-    if (!hasDemo) {
-      for (const old of c) { try { await deleteChat(old.id); } catch {} }
-      const demoChat: ChatSession = {
-        id: crypto.randomUUID(),
-        name: `${s?.characterName || '侠客'} - 江湖之旅`,
-        messages: [],
-        characterName: s?.characterName || '侠客',
-        userName: s?.userName || '无名',
-        presetId: s?.activePresetId || p[0]?.id || null,
-        lorebookIds: [...(s?.activeLorebookIds || [])],
-        variables: JSON.parse(JSON.stringify(DEMO_VARIABLES)), // deep clone for IndexedDB
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
-      console.log('[demo] creating chat with', Object.keys(demoChat.variables).length, 'variable keys');
-      await saveChat(demoChat);
-      c = [demoChat];
-      setActiveChatId(demoChat.id);
-    }
-    // If we created a demo, inject its data into the state-synced chat
-    if (c.length > 0 && c[0].variables && typeof (c[0].variables as Record<string,unknown>)['主角状态'] === 'object') {
-      // Ensure the chat in state has the full nested data
-      const syncedChat = { ...c[0], variables: JSON.parse(JSON.stringify(c[0].variables)) };
-      setChats([syncedChat, ...c.slice(1)]);
-      setActiveChatId(syncedChat.id);
-      console.log('[demo] synced chat with', Object.keys(syncedChat.variables).length, 'root keys, 主角状态:', Object.keys((syncedChat.variables as Record<string,unknown>)['主角状态'] as object || {}));
-    } else {
-      setChats(c);
-    }
+    setChats(c);
     setIsLoading(false);
   }, []);
 
