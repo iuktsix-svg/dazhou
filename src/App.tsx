@@ -15,6 +15,7 @@ import { BountyModal } from './components/Modals/BountyModal';
 import { StorageModal } from './components/Modals/StorageModalV2';
 import { SettingsModal } from './components/SillyTavern/SettingsModal';
 import { WelcomePage } from './components/WelcomePage';
+import { NewGameFlow } from './components/NewGameFlow';
 import { ArchiveModal } from './components/ArchiveModal';
 import { ChangelogModal } from './components/ChangelogModal';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
@@ -32,6 +33,7 @@ function App() {
   const [drawer, setDrawer] = useState<DrawerType>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showNewGame, setShowNewGame] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
 
@@ -49,9 +51,11 @@ function App() {
 
   return (
     <NotificationCenter>
-      {showWelcome ? (
+      {showNewGame ? (
+        <NewGameFlow onStart={() => { setShowNewGame(false); setShowWelcome(false); }} />
+      ) : showWelcome ? (
         <WelcomePage
-          onNewGame={() => { setShowWelcome(false); }}
+          onNewGame={() => { setShowNewGame(true); }}
           onLoadGame={() => { setShowArchive(true); }}
           onSettings={() => { setShowSettings(true); }}
           onChangelog={() => { setShowChangelog(true); }}
