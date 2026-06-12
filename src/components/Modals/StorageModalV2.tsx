@@ -8,10 +8,11 @@ interface ItemData { 物品类型?: string; 物品描述?: string; 数量?: numb
 const TYPE_META: Record<string, { char: string; bg: string; border: string; text: string }> = {
   '丹药': { char: '丹', bg: '#8B451310', border: '#8B451340', text: '#8B4513' },
   '武器': { char: '兵', bg: '#6B3A3A10', border: '#6B3A3A40', text: '#6B3A3A' },
-  '杂物': { char: '杂', bg: '#5A5A5A10', border: '#5A5A5A40', text: '#5A5A5A' },
-  '秘籍': { char: '卷', bg: '#8B691410', border: '#8B691440', text: '#8B6914' },
   '防具': { char: '甲', bg: '#3A5A6B10', border: '#3A5A6B40', text: '#3A5A6B' },
   '饰品': { char: '佩', bg: '#6B5A8A10', border: '#6B5A8A40', text: '#6B5A8A' },
+  '秘籍': { char: '卷', bg: '#8B691410', border: '#8B691440', text: '#8B6914' },
+  '重要': { char: '令', bg: '#b5281a10', border: '#b5281a40', text: '#b5281a' },
+  '杂物': { char: '杂', bg: '#5A5A5A10', border: '#5A5A5A40', text: '#5A5A5A' },
 };
 
 export function StorageModal({ isOpen, onClose, onSend }: Props) {
