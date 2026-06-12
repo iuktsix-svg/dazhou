@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { type ChatMessage, ASSISTANT_ROLE } from '../sillytavern';
+import { useSillytavern } from '../hooks/useSillytavern';
 
 interface Props { messages: ChatMessage[]; streamingText: string; isStreaming: boolean; onOption: (text: string) => void; }
 
@@ -43,18 +44,21 @@ const DEMO_TEXT = `<maintext>
 </option>`;
 
 export function StoryArea({ messages, streamingText, isStreaming, onOption }: Props) {
+  const { settings } = useSillytavern();
   const [info] = useState({ time: '午时三刻', location: '大周·洛阳·平康坊' });
+  const stripTags = settings?.stripTags || ['thinking', 'think', 'sum', 'vars'];
 
   const last = [...messages].reverse().find(m => m.role === ASSISTANT_ROLE);
   const rawText = (isStreaming && streamingText) ? streamingText : (last?.content || DEMO_TEXT);
 
   // Strip tags for clean display
-  const cleanText = rawText
+  // Strip display tags dynamically from settings
+  let cleanText = rawText
     .replace(/<maintext>/gi, '').replace(/<\/maintext>/gi, '')
-    .replace(/<option>[\s\S]*?<\/option>/gi, '')
-    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
-    .replace(/<sum>[\s\S]*?<\/sum>/gi, '')
-    .replace(/<vars>[\s\S]*?<\/vars>/gi, '');
+    .replace(/<option>[\s\S]*?<\/option>/gi, '');
+  for (const tag of stripTags) {
+    cleanText = cleanText.replace(new RegExp(`<${tag}>[\\s\\S]*?<\\/${tag}>`, 'gi'), '');
+  }
 
   const blocks = parseBlocks(cleanText);
 

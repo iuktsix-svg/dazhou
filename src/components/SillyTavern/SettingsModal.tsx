@@ -5,7 +5,7 @@ import { Settings, Save, Wifi, Download, Trash2, Plus, MessageSquare } from 'luc
 
 interface Props { onClose: () => void; }
 
-type Section = 'main' | 'api' | 'archive';
+type Section = 'main' | 'api' | 'archive' | 'filter';
 
 export function SettingsModal({ onClose }: Props) {
   const { settings, updateSettings, chats, createChat, loadChat, deleteChat, activeChatId } = useSillytavern();
@@ -18,7 +18,7 @@ export function SettingsModal({ onClose }: Props) {
   const [fetchingModels, setFetchingModels] = useState(false);
 
   useEffect(() => { if (settings) setForm(JSON.parse(JSON.stringify(settings))); }, [settings]);
-  const f = form || { id: 'app-settings', api: { primary: { enabled: true, baseUrl: '', apiKey: '', model: '' }, secondary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, memory: { enabled: false, baseUrl: '', apiKey: '', model: '' } }, userName: '', characterName: '', activeLorebookIds: [], activePresetId: null, uiMode: 'game' as const, customTags: [], createdAt: 0, updatedAt: 0 };
+  const f = form || { id: 'app-settings', api: { primary: { enabled: true, baseUrl: '', apiKey: '', model: '' }, secondary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, memory: { enabled: false, baseUrl: '', apiKey: '', model: '' } }, userName: '', characterName: '', activeLorebookIds: [], activePresetId: null, uiMode: 'game' as const, customTags: [], stripTags: [], createdAt: 0, updatedAt: 0 };
   if (!f) return null;
 
   const handleSave = async () => { await updateSettings(f); onClose(); };
@@ -64,7 +64,7 @@ export function SettingsModal({ onClose }: Props) {
     <div className="dz-modal-shell" onClick={section === 'main' ? onClose : undefined}>
       <div className={`dz-modal-box ${section !== 'main' ? 'wide' : ''}`} onClick={e => e.stopPropagation()}>
         <div className="dz-modal-head">
-          <h2>{section === 'main' ? '系统设置' : section === 'api' ? 'API 设置' : '存档管理'}</h2>
+          <h2>{section === 'main' ? '系统设置' : section === 'api' ? 'API 设置' : section === 'filter' ? '正文过滤' : '存档管理'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             {section !== 'main' && (
               <button onClick={() => setSection('main')} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}>返回</button>
@@ -94,6 +94,17 @@ export function SettingsModal({ onClose }: Props) {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', marginBottom: 3 }}>存档管理</div>
                   <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>创建、切换、删除游戏存档 · {chats.length} 个存档</div>
+                </div>
+                <span style={{ color: 'var(--wx-ink-dim)', fontSize: 18 }}>›</span>
+              </div>
+
+              <div onClick={() => setSection('filter')} style={cardStyle} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--wx-cyan)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(44,36,22,0.12)'}>
+                <div style={{ width: 44, height: 44, borderRadius: 'var(--rd-md)', background: 'rgba(90,140,160,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Settings size={20} style={{ color: 'var(--wx-cyan)' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', marginBottom: 3 }}>正文过滤</div>
+                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>管理正文中需要过滤的标签 · {(f.stripTags || []).length} 个规则</div>
                 </div>
                 <span style={{ color: 'var(--wx-ink-dim)', fontSize: 18 }}>›</span>
               </div>
@@ -183,6 +194,47 @@ export function SettingsModal({ onClose }: Props) {
           )}
 
           {/* ============ ARCHIVE ============ */}
+          {/* ============ FILTER ============ */}
+          {section === 'filter' && (
+            <div>
+              <div style={{ marginBottom: 18, fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', lineHeight: 1.7 }}>
+                这些标签及其内容会从正文显示中自动过滤。标签名不含尖括号。
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <input id="new-tag-input" placeholder="输入标签名…" style={{ flex: 1, padding: '9px 14px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-surface)', color: 'var(--wx-ink)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none' }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      const inp = e.currentTarget;
+                      const v = inp.value.trim();
+                      if (v) {
+                        setForm(prev => prev ? { ...prev, stripTags: [...(prev.stripTags || []), v] } : prev);
+                        inp.value = '';
+                      }
+                    }
+                  }} />
+                <button onClick={() => {
+                  const inp = document.getElementById('new-tag-input') as HTMLInputElement;
+                  const v = inp?.value?.trim();
+                  if (v) { setForm(prev => prev ? { ...prev, stripTags: [...(prev.stripTags || []), v] } : prev); inp.value = ''; }
+                }} className="wx-btn wx-btn-outline" style={{ padding: '9px 16px' }}>添加</button>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {(f.stripTags || ['thinking', 'think', 'sum', 'vars']).map((tag, i) => (
+                  <div key={tag + i} style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+                    background: 'var(--wx-card)', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-full)',
+                    fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)',
+                  }}>
+                    &lt;{tag}&gt;
+                    <button onClick={() => {
+                      setForm(prev => prev ? { ...prev, stripTags: (prev.stripTags || []).filter((_, j) => j !== i) } : prev);
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--wx-vermillion)', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {section === 'archive' && (
             <div>
               <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>

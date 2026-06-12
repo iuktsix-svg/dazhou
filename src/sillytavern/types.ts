@@ -101,6 +101,7 @@ export interface AppSettings {
   activePresetId: string | null;
   uiMode: 'chat' | 'game';
   customTags: string[];         // e.g. ['maintext', 'option', 'sum', 'vars', 'thinking', 'think']
+  stripTags: string[];          // tags to strip from body display
   gameSettings?: GameSettings;
   createdAt: number;
   updatedAt: number;
