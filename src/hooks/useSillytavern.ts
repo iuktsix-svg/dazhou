@@ -68,8 +68,11 @@ export function useSillytavern() {
     setActiveLorebookIds(activeIds);
     setChats(c);
     // Auto-select most recent chat if none active
-    if (c.length > 0 && !activeChatId) {
-      setActiveChatId(c[0].id);
+    console.log('[loadAll] chats:', c.length, 'activeChatId:', activeChatId);
+    if (c.length > 0) {
+      const msgs = c[0].messages?.length || 0;
+      console.log('[loadAll] first chat:', c[0].name, 'msgs:', msgs);
+      if (!activeChatId) { setActiveChatId(c[0].id); console.log('[loadAll] auto-selected:', c[0].id); }
     }
     setIsLoading(false);
   }, []);

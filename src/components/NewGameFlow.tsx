@@ -28,7 +28,7 @@ const INTRO_TEXT = [
 ];
 
 export function NewGameFlow({ onStart }: Props) {
-  const { createChat, sendMessage, isLoading } = useSillytavern();
+  const { createChat, isLoading } = useSillytavern();
   const [step, setStep] = useState<Step>('intro');
   const [introLine, setIntroLine] = useState(0);
   const [gender, setGender] = useState<'男' | '女' | '其他'>('男');
@@ -47,21 +47,24 @@ export function NewGameFlow({ onStart }: Props) {
     if (!pendingOpening) return;
     (async () => {
       const playerName = name.trim() || (gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客');
-      const cid = await createChat(`${playerName} - 江湖之旅`).catch(() => null);
-      // Save opening as user message so it shows in UI
+      console.log('[newgame] creating chat for:', playerName);
+      const cid = await createChat(`${playerName} - 江湖之旅`).catch(e => { console.error('[newgame] createChat failed:', e); return null; });
+      console.log('[newgame] chat id:', cid);
       if (cid) {
         const { getChat, saveChat } = await import('../sillytavern/database');
         const chat = await getChat(cid);
+        console.log('[newgame] got chat:', !!chat, 'messages:', chat?.messages?.length);
         if (chat) {
           const introMsg = desc.trim()
-            ? `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。自我介绍：${desc}\n\n请根据上述开局背景开始叙事，并在首次回复中用 <var> 标签设置初始变量。`
-            : `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。\n\n请根据上述开局背景开始叙事，并在首次回复中用 <var> 标签设置初始变量。`;
+            ? `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。自我介绍：${desc}\n\n请根据上述开局背景开始叙事。`
+            : `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。\n\n请根据上述开局背景开始叙事。`;
           chat.messages = [{ id: crypto.randomUUID(), role: 'user', content: introMsg, timestamp: Date.now(), variables: {} }];
           chat.updatedAt = Date.now();
           await saveChat(chat);
-          try { sendMessage(introMsg); } catch {}
+          console.log('[newgame] saved chat with message, length:', introMsg.length);
         }
       }
+      console.log('[newgame] calling onStart');
       onStart();
     })();
   }, [pendingOpening]);
