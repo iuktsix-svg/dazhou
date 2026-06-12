@@ -67,6 +67,10 @@ export function useSillytavern() {
     const activeIds = s?.activeLorebookIds?.length ? s.activeLorebookIds : l.map(b => b.id);
     setActiveLorebookIds(activeIds);
     setChats(c);
+    // Auto-select most recent chat if none active
+    if (c.length > 0 && !activeChatId) {
+      setActiveChatId(c[0].id);
+    }
     setIsLoading(false);
   }, []);
 
