@@ -1,97 +1,98 @@
 import { useState, useEffect } from 'react';
 import { useSillytavern } from '../../hooks/useSillytavern';
-import { type AppSettings, type ApiConfig, type ApiEndpoint, DEFAULT_TAGS } from '../../sillytavern';
+import { type AppSettings, type ApiConfig, type ApiEndpoint } from '../../sillytavern';
 
 interface Props { onClose: () => void; }
 
-
 export function SettingsModal({ onClose }: Props) {
-  const { settings, updateSettings } = useSillytavern();
+  const { settings, updateSettings, chats, createChat, loadChat, deleteChat, activeChatId } = useSillytavern();
   const [form, setForm] = useState<AppSettings | null>(null);
+  const [tab, setTab] = useState<'settings' | 'archive'>('settings');
+  const [newChatName, setNewChatName] = useState('');
 
-  useEffect(() => {
-    if (settings) setForm(JSON.parse(JSON.stringify(settings)));
-  }, [settings]);
-
+  useEffect(() => { if (settings) setForm(JSON.parse(JSON.stringify(settings))); }, [settings]);
   if (!form) return null;
 
   const handleSave = async () => { await updateSettings(form); onClose(); };
-
-  const update = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
-    setForm(prev => prev ? { ...prev, [key]: value } : prev);
-
+  const update = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => setForm(prev => prev ? { ...prev, [key]: value } : prev);
   const updateEndpoint = (which: keyof ApiConfig, patch: Partial<ApiEndpoint>) =>
     setForm(prev => prev ? { ...prev, api: { ...prev.api, [which]: { ...prev.api[which], ...patch } } } : prev);
+
+  const handleCreateChat = async () => { await createChat(newChatName.trim() || undefined); setNewChatName(''); };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-xl" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>系统设置</h2>
+          <h2>{tab === 'settings' ? '系统设置' : '存档管理'}</h2>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
+        {/* Tab bar */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--ink-border)', padding: '0 20px' }}>
+          <button onClick={() => setTab('settings')} style={{ padding: '10px 18px', background: 'none', border: 'none', borderBottom: tab === 'settings' ? '2px solid var(--dz-red)' : '2px solid transparent', color: tab === 'settings' ? 'var(--dz-white)' : 'var(--dz-text-dim)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 14 }}>设置</button>
+          <button onClick={() => setTab('archive')} style={{ padding: '10px 18px', background: 'none', border: 'none', borderBottom: tab === 'archive' ? '2px solid var(--dz-red)' : '2px solid transparent', color: tab === 'archive' ? 'var(--dz-white)' : 'var(--dz-text-dim)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 14 }}>存档</button>
+        </div>
+
         <div className="modal-body">
-          {/* Character */}
-          <section>
-            <h3>角色与用户</h3>
-            <label>用户名 <input value={form.userName} onChange={e => update('userName', e.target.value)} /></label>
-            <label>角色名 <input value={form.characterName} onChange={e => update('characterName', e.target.value)} /></label>
-          </section>
-
-          {/* 3-API Endpoints */}
-          {(['primary', 'secondary', 'memory'] as const).map(which => {
-            const ep = form.api[which];
-            const labels = { primary: '正文 API', secondary: '变量 API (JSON Patch)', memory: '记忆 API (总结压缩)' };
-            return (
-              <section key={which}>
-                <h3>
-                  {labels[which]}
-                  <label className="checkbox-label" style={{ marginLeft: 12 }}>
-                    <input type="checkbox" checked={ep?.enabled ?? false} onChange={e => updateEndpoint(which, { enabled: e.target.checked })} />
-                    启用
-                  </label>
-                </h3>
-                {ep?.enabled !== false && (
-                  <>
-                    <label>Base URL <input value={ep?.baseUrl || ''} onChange={e => updateEndpoint(which, { baseUrl: e.target.value })} placeholder="https://api.openai.com/v1" /></label>
-                    <label>API Key <input type="password" value={ep?.apiKey || ''} onChange={e => updateEndpoint(which, { apiKey: e.target.value })} /></label>
-                    <label>Model <input value={ep?.model || ''} onChange={e => updateEndpoint(which, { model: e.target.value })} placeholder="gpt-4o" /></label>
-                  </>
-                )}
+          {tab === 'settings' && (
+            <>
+              <section><h3>角色与用户</h3>
+                <label>用户名 <input value={form.userName} onChange={e => update('userName', e.target.value)} /></label>
+                <label>角色名 <input value={form.characterName} onChange={e => update('characterName', e.target.value)} /></label>
               </section>
-            );
-          })}
 
-          {/* UI Mode */}
-          <section>
-            <h3>界面模式</h3>
-            <select value={form.uiMode} onChange={e => update('uiMode', e.target.value as 'chat' | 'game')}>
-              <option value="chat">聊天模式</option>
-              <option value="game">游戏模式（正文+选项）</option>
-            </select>
-          </section>
+              {(['primary', 'secondary', 'memory'] as const).map(which => {
+                const ep = form.api[which];
+                const labels = { primary: '正文 API', secondary: '变量 API', memory: '记忆 API' };
+                return (<section key={which}><h3>{labels[which]}<label className="checkbox-label" style={{ marginLeft: 12 }}><input type="checkbox" checked={ep?.enabled ?? false} onChange={e => updateEndpoint(which, { enabled: e.target.checked })} />启用</label></h3>
+                  {ep?.enabled !== false && (<>
+                    <label>Base URL <input value={ep?.baseUrl || ''} onChange={e => updateEndpoint(which, { baseUrl: e.target.value })} /></label>
+                    <label>API Key <input type="password" value={ep?.apiKey || ''} onChange={e => updateEndpoint(which, { apiKey: e.target.value })} /></label>
+                    <label>Model <input value={ep?.model || ''} onChange={e => updateEndpoint(which, { model: e.target.value })} /></label>
+                  </>)}
+                </section>);
+              })}
+            </>
+          )}
 
-          {/* Custom Tags */}
-          <section>
-            <h3>自定义标签</h3>
-            <input value={form.customTags.join(' ')} onChange={e => update('customTags', e.target.value.split(/\s+/).filter(Boolean))} placeholder={DEFAULT_TAGS.join(' ')} />
-            <small>空格分隔。游戏模式至少需要 maintext 和 option。</small>
-          </section>
-
-          {form.uiMode === 'game' && (
+          {tab === 'archive' && (
             <section>
-              <h3>游戏设置</h3>
-              <label className="checkbox-label"><input type="checkbox" checked={form.gameSettings?.autoContinue ?? false} onChange={e => update('gameSettings', { ...form.gameSettings, autoContinue: e.target.checked })} /> 空选项时自动继续</label>
-              <label className="checkbox-label"><input type="checkbox" checked={form.gameSettings?.showThinking ?? true} onChange={e => update('gameSettings', { ...form.gameSettings, showThinking: e.target.checked })} /> 显示思考过程</label>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                <input value={newChatName} onChange={e => setNewChatName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleCreateChat(); }}
+                  placeholder="新存档名称（可选）" style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--ink-border)', borderRadius: 'var(--radius-md)', background: 'var(--ink-deep)', color: 'var(--moon)', fontFamily: 'var(--font-ui)', fontSize: 14 }} />
+                <button onClick={handleCreateChat} className="dz-btn dz-btn-red">新建存档</button>
+              </div>
+
+              {chats.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--dz-text-dim)', fontFamily: 'var(--font-serif)' }}>暂无存档。创建一个来开始游戏。</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 360, overflow: 'auto' }}>
+                  {chats.map(chat => (
+                    <div key={chat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: chat.id === activeChatId ? 'rgba(197,48,48,0.08)' : 'var(--ink-card)', border: `1px solid ${chat.id === activeChatId ? 'rgba(197,48,48,0.3)' : 'var(--ink-border)'}`, borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <div style={{ flex: 1, minWidth: 0 }} onClick={() => { loadChat(chat.id); onClose(); }}>
+                        <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, color: chat.id === activeChatId ? 'var(--dz-white)' : 'var(--moon)', fontSize: 15 }}>{chat.name}</div>
+                        <div style={{ fontFamily: 'var(--font-ui)', fontSize: 12, color: 'var(--dz-text-dim)', marginTop: 3 }}>
+                          {chat.messages.length} 条消息 · {new Date(chat.updatedAt).toLocaleString('zh-CN')}
+                          {chat.id === activeChatId && <span style={{ color: 'var(--dz-red)', marginLeft: 8 }}>● 当前</span>}
+                        </div>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); if (confirm('确定删除此存档？')) deleteChat(chat.id); }}
+                        style={{ padding: '4px 12px', background: 'none', border: '1px solid var(--ink-border)', borderRadius: 'var(--radius-sm)', color: 'var(--dz-text-dim)', cursor: 'pointer', fontFamily: 'var(--font-ui)', fontSize: 12 }}>删除</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           )}
         </div>
 
-        <div className="modal-footer">
-          <button onClick={handleSave}>保存</button>
-          <button onClick={onClose}>取消</button>
-        </div>
+        {tab === 'settings' && (
+          <div className="modal-footer">
+            <button onClick={handleSave} className="dz-btn dz-btn-red">保存</button>
+            <button onClick={onClose} className="dz-btn dz-btn-outline">取消</button>
+          </div>
+        )}
       </div>
     </div>
   );
