@@ -183,11 +183,10 @@ export function useSillytavern() {
   }, [activeChat]);
 
   // ---- Send Message (core) ----
-  const sendMessage = useCallback(async (content: string, optChatId?: string) => {
-    // Resolve target chat: prefer optChatId (from createChat in same tick), fall back to activeChat
-    const targetChat = optChatId
-      ? (chatsRef.current.find(c => c.id === optChatId) || activeChat)
-      : activeChat;
+  const sendMessage = useCallback(async (content: string, optChat?: ChatSession) => {
+    // Resolve target chat: prefer optChat (passed explicitly, avoids stale closure),
+    // fall back to activeChat from state (for normal usage)
+    const targetChat = optChat || activeChat;
 
     if (!settings || !targetChat) {
       throw new Error('No active chat or settings not loaded');

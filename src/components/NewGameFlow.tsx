@@ -64,9 +64,8 @@ export function NewGameFlow({ onStart }: Props) {
           chat.updatedAt = Date.now();
           await saveChat(chat);
           setChatMessages(cid, []);
-          // Trigger AI: displayText is the opening scene the player chose.
-          // Player info is prepended so the AI sees it, but the main visible content is the story.
-          try { sendMessage(`${playerInfo}\n\n<开场背景>\n${displayText}\n</开场背景>`, cid); } catch {}
+          // Trigger AI with the full chat object (avoids stale closure on activeChat)
+          try { sendMessage(`${playerInfo}\n\n<开场背景>\n${displayText}\n</开场背景>`, chat); } catch {}
         }
       }
       onStart();
