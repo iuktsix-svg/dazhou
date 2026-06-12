@@ -73,10 +73,6 @@ export function LeaderboardModal({ isOpen, onClose }: Props) {
               <button className="dz-modal-close-btn" onClick={onClose}>×</button>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {openBook && <button onClick={() => setOpenBook(null)} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}><ChevronLeft size={14} /> 书架</button>}
-            <button className="dz-modal-close-btn" onClick={onClose}>×</button>
-          </div>
         </div>
         <div className="dz-modal-body">
           {/* ============ BOOKSHELF VIEW ============ */}
