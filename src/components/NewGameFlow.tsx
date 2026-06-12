@@ -28,7 +28,7 @@ const INTRO_TEXT = [
 ];
 
 export function NewGameFlow({ onStart }: Props) {
-  const { createChat, isLoading } = useSillytavern();
+  const { createChat, sendMessage, isLoading } = useSillytavern();
   const [step, setStep] = useState<Step>('intro');
   const [introLine, setIntroLine] = useState(0);
   const [gender, setGender] = useState<'男' | '女' | '其他'>('男');
@@ -52,12 +52,19 @@ export function NewGameFlow({ onStart }: Props) {
         const { getChat, saveChat } = await import('../sillytavern/database');
         const chat = await getChat(cid);
         if (chat) {
-          const introMsg = desc.trim()
-            ? `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。自我介绍：${desc}\n\n请根据上述开局背景开始叙事。`
-            : `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。\n\n请根据上述开局背景开始叙事。`;
-          chat.messages = [{ id: crypto.randomUUID(), role: 'user', content: introMsg, timestamp: Date.now(), variables: {} }];
+          // Display text: the beautiful opening story (replace {{user}} with player desc)
+          const displayText = pendingOpening.text.replace(/\{\{user\}\}/g, desc || `${gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客'}`);
+          // AI prompt: player info for AI to start generating
+          const aiPrompt = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}\n\n请根据以下开场背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态(健康)、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`;
+          chat.messages = [
+            { id: crypto.randomUUID(), role: 'user', content: displayText, timestamp: Date.now(), variables: {} },
+            // AI prompt as system message — hidden from story display, triggers AI
+            { id: crypto.randomUUID(), role: 'system', content: aiPrompt, timestamp: Date.now() + 1, variables: {} },
+          ];
           chat.updatedAt = Date.now();
           await saveChat(chat);
+          // Send the AI prompt to trigger generation
+          try { sendMessage(aiPrompt); } catch {}
         }
       }
       onStart();
