@@ -41,8 +41,8 @@ export function BountyModal({ isOpen, onClose, onSend }: Props) {
           {entries.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 50 }}>
               <Crosshair size={36} style={{ color: 'var(--dz-text-dim)', opacity: 0.3, marginBottom: 12 }} />
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 16, color: 'var(--dz-text-dim)', fontWeight: 600 }}>暂无悬赏</div>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--dz-text-dim)', opacity: 0.6, marginTop: 8, lineHeight: 1.6 }}>
+              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: '#c8a86c', fontWeight: 700, marginBottom: 8 }}>暂无悬赏</div>
+              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#8a7a5a', lineHeight: 1.7 }}>
                 在江湖中打听消息或揭下告示<br />悬赏目标将汇集于此
               </div>
             </div>
