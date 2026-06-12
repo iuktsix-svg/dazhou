@@ -19,6 +19,7 @@ import {
   type ChatSession, type ChatMessage, type ParsedBlock,
 } from '../sillytavern';
 import { autoImportLorebooks } from '../lorebooks/auto-import';
+import { DEMO_VARIABLES } from '../data/demoState';
 
 export function useSillytavern() {
   // ---- State ----
@@ -46,14 +47,31 @@ export function useSillytavern() {
     setIsLoading(true);
     await initializeDatabase();
     await autoImportLorebooks(); // silently import any .json dropped in src/lorebooks/
-    const [l, p, s, c] = await Promise.all([
-      getLorebooks(), getPresets(), getSettings(), getChats(),
-    ]);
+    const [l, p, s] = await Promise.all([getLorebooks(), getPresets(), getSettings()]);
+    let c = await getChats();
     setLorebooks(l);
     setPresets(p);
     setSettings(s || null);
     setActiveLorebookIds(s?.activeLorebookIds || []);
     setChats(c);
+    // Auto-create demo chat if none exist
+    if (c.length === 0 && s) {
+      const demoChat: ChatSession = {
+        id: crypto.randomUUID(),
+        name: `${s.characterName || '侠客'} - 江湖之旅`,
+        messages: [],
+        characterName: s.characterName || '侠客',
+        userName: s.userName || '无名',
+        presetId: s.activePresetId || p[0]?.id || null,
+        lorebookIds: [...(s.activeLorebookIds || [])],
+        variables: DEMO_VARIABLES as Record<string, string | number>,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      await saveChat(demoChat);
+      c = [demoChat, ...c];
+      setActiveChatId(demoChat.id);
+    }
     setIsLoading(false);
   }, []);
 
