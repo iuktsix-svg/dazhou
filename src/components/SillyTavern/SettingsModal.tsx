@@ -11,9 +11,11 @@ export function SettingsModal({ onClose }: Props) {
   const [newChatName, setNewChatName] = useState('');
 
   useEffect(() => { if (settings) setForm(JSON.parse(JSON.stringify(settings))); }, [settings]);
-  if (!form) return null;
+  // Fallback form so modal always renders
+  const f = form || { id: 'app-settings', api: { primary: { enabled: true, baseUrl: '', apiKey: '', model: '' }, secondary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, memory: { enabled: false, baseUrl: '', apiKey: '', model: '' } }, userName: '', characterName: '', activeLorebookIds: [], activePresetId: null, uiMode: 'game' as const, customTags: [], createdAt: 0, updatedAt: 0 };
+  if (!f) return null;
 
-  const handleSave = async () => { await updateSettings(form); onClose(); };
+  const handleSave = async () => { await updateSettings(f); onClose(); };
   const update = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => setForm(prev => prev ? { ...prev, [key]: value } : prev);
   const updateEndpoint = (which: keyof ApiConfig, patch: Partial<ApiEndpoint>) =>
     setForm(prev => prev ? { ...prev, api: { ...prev.api, [which]: { ...prev.api[which], ...patch } } } : prev);
@@ -43,12 +45,12 @@ export function SettingsModal({ onClose }: Props) {
           {tab === 'settings' && (
             <>
               <section><h3>角色与用户</h3>
-                <label>用户名 <input value={form.userName} onChange={e => update('userName', e.target.value)} /></label>
-                <label>角色名 <input value={form.characterName} onChange={e => update('characterName', e.target.value)} /></label>
+                <label>用户名 <input value={f.userName} onChange={e => update('userName', e.target.value)} /></label>
+                <label>角色名 <input value={f.characterName} onChange={e => update('characterName', e.target.value)} /></label>
               </section>
 
               {(['primary', 'secondary', 'memory'] as const).map(which => {
-                const ep = form.api[which];
+                const ep = f.api[which];
                 const labels = { primary: '正文 API', secondary: '变量 API', memory: '记忆 API' };
                 return (<section key={which}><h3>{labels[which]}<label className="checkbox-label" style={{ marginLeft: 12 }}><input type="checkbox" checked={ep?.enabled ?? false} onChange={e => updateEndpoint(which, { enabled: e.target.checked })} />启用</label></h3>
                   {ep?.enabled !== false && (<>

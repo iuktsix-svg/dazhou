@@ -1,8 +1,7 @@
-import { Settings, User, Backpack, Users, Newspaper, Trophy, Map } from 'lucide-react';
+import { Settings, User, Users, Newspaper, Trophy, Map } from 'lucide-react';
 
 const PANEL_BTNS = [
   { id: 'status' as const, label: '命盘', icon: User },
-  { id: 'bag' as const, label: '行囊', icon: Backpack },
   { id: 'contacts' as const, label: '人脉', icon: Users },
   { id: 'news' as const, label: '情报', icon: Newspaper },
   { id: 'leaderboard' as const, label: '榜单', icon: Trophy },
