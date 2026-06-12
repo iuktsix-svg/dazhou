@@ -47,8 +47,11 @@ function App() {
   const openPanel = useCallback((p: PanelId) => { setPanel(p); setDrawer(null); }, []);
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
 
-  // Reload data when entering main game
-  useEffect(() => { if (!showWelcome && !showNewGame && !isLoading) loadAll(); }, [showWelcome, showNewGame, isLoading]);
+  // Reload data once when entering main game
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (!showWelcome && !showNewGame && !entered) { loadAll(); setEntered(true); }
+  }, [showWelcome, showNewGame, entered]);
 
   if (isLoading) return <div className="dz-loading">大周日暮录</div>;
 
