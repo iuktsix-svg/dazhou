@@ -67,6 +67,13 @@ export function useSillytavern() {
     } else {
       setSettings(s);
     }
+    // Auto-create default preset if none exist (needed for sendMessage to work)
+    if (p.length === 0) {
+      const { createDefaultPreset } = await import('../sillytavern/editor-utils');
+      const dp: ChatPreset = { id: crypto.randomUUID(), createdAt: Date.now(), updatedAt: Date.now(), ...createDefaultPreset() };
+      await savePreset(dp);
+      setPresets([dp]);
+    }
     // Auto-activate all imported lorebooks if none selected
     const activeIds = s?.activeLorebookIds?.length ? s.activeLorebookIds : l.map(b => b.id);
     setActiveLorebookIds(activeIds);
@@ -201,28 +208,27 @@ export function useSillytavern() {
     setStreamingBlocks([]);
 
     setLastError(null);
+
+    // ---- Step 1: Save user message immediately (before any API work) ----
+    const currentVariables = targetChat.variables || {};
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content,
+      timestamp: Date.now(),
+      variables: { ...currentVariables },
+    };
+    const updatedMessages = [...targetChat.messages, userMessage];
+    let updatedChat = { ...targetChat, messages: updatedMessages, updatedAt: Date.now() };
+    await saveChat(updatedChat);
+    setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
+
+    // ---- Step 2: API call (may fail — user message is already persisted) ----
     try {
       const activePreset = presets.find(p => p.id === settings.activePresetId) || presets[0];
       if (!activePreset) throw new Error('没有可用的预设，请先创建一个预设。');
 
       const activeBooks = lorebooks.filter(b => activeLorebookIds.includes(b.id));
-      const currentVariables = targetChat.variables || {};
-
-      // Add user message
-      const userMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content,
-        timestamp: Date.now(),
-        variables: { ...currentVariables },
-      };
-
-      const updatedMessages = [...targetChat.messages, userMessage];
-      let updatedChat = { ...targetChat, messages: updatedMessages, updatedAt: Date.now() };
-
-      // 立刻保存用户消息到 DB 和 state，确保即使 API 失败开场白也不丢失
-      await saveChat(updatedChat);
-      setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
 
       // Assemble prompt
       const { messages: promptMessages } = assemblePrompt({
