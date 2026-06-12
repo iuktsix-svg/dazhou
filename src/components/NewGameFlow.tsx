@@ -84,7 +84,7 @@ export function NewGameFlow({ onStart }: Props) {
   const [introLine, setIntroLine] = useState(0);
   const [gender, setGender] = useState<'男' | '女' | '其他'>('男');
   const [desc, setDesc] = useState('');
-  const [pendingOpening, setPendingOpening] = useState<string | null>(null);
+  const [pendingOpening, setPendingOpening] = useState<{ text: string; id: number } | null>(null);
 
   // Intro text cycling
   useEffect(() => {
@@ -102,9 +102,10 @@ export function NewGameFlow({ onStart }: Props) {
     if (!pendingOpening) return;
     (async () => {
       await createChat(`${gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客'} - 江湖之旅`);
+      // Start vars are pre-defined in START_VARS map — AI will set them based on opening context
       const introMsg = desc.trim()
-        ? `[玩家信息] 性别：${gender}。自我介绍：${desc}\n\n${pendingOpening}`
-        : `[玩家信息] 性别：${gender}。\n\n${pendingOpening}`;
+        ? `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。自我介绍：${desc}\n\n请根据上述开局背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`
+        : `[开局] ${pendingOpening.text}\n\n[玩家信息] 性别：${gender}。\n\n请根据上述开局背景开始叙事，并在首次回复中用 <var> 标签设置初始变量：所在地点、身体状态、持有银两、武功境界(淬体)、当前气血150、气血上限150、阵营倾向(中立)。`;
       sendMessage(introMsg);
       onStart();
     })();
@@ -113,7 +114,7 @@ export function NewGameFlow({ onStart }: Props) {
   const handleCustomStart = () => {
     const custom = (document.getElementById('custom-opening-input') as HTMLTextAreaElement)?.value?.trim();
     if (!custom) return;
-    setPendingOpening(custom);
+    setPendingOpening({ text: custom, id: 1 });
   };
 
   if (step === 'intro') {
@@ -236,7 +237,7 @@ export function NewGameFlow({ onStart }: Props) {
                 const prompt = (o as unknown as { opening?: string }).opening
                   ? ((o as unknown as { opening: string }).opening.replace(/\{\{user\}\}/g, desc || `${gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客'}`))
                   : `[开局选择] ${o.label}\n\n请以"${o.title}"为背景开始游戏，我是${gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客'}${desc ? '，' + desc : '。'}请从这个场景开始叙述。`;
-                setPendingOpening(prompt);
+                setPendingOpening({ text: prompt, id: o.id });
               }}
               style={{
                 padding: '18px 16px', cursor: 'pointer', textAlign: 'left',
