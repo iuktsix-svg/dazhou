@@ -13,7 +13,7 @@ const CORE_BOOKS: BookDef[] = [
   { key: '惊蛰榜', label: '惊蛰榜', subtitle: '青年才俊', icon: Sparkles, color: '#1E5A7A', spine: '#16445E', width: 36, core: true },
   { key: '群芳谱', label: '群芳谱', subtitle: '江湖群芳', icon: Star, color: '#8B3A5A', spine: '#6B2A44', width: 32, core: true },
   { key: '名锋卷', label: '名锋卷', subtitle: '名剑锋镝', icon: Swords, color: '#4A6A6A', spine: '#3A5A5A', width: 35, core: true },
-  { key: '大周风土人情', label: '大周风土人情', subtitle: '九州志异', icon: BookOpen, color: '#5A7A4A', spine: '#3A5A2A', width: 40, core: true },
+  { key: '岁时节庆录', label: '岁时节庆录', subtitle: '九州盛会', icon: BookOpen, color: '#5A7A4A', spine: '#3A5A2A', width: 42, core: true },
 ];
 
 export function LeaderboardModal({ isOpen, onClose }: Props) {
