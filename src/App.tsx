@@ -14,6 +14,7 @@ import { MapModal } from './components/Modals/MapModalV2';
 import { BountyModal } from './components/Modals/BountyModal';
 import { StorageModal } from './components/Modals/StorageModalV2';
 import { SettingsModal } from './components/SillyTavern/SettingsModal';
+import { WelcomePage } from './components/WelcomePage';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
 import './styles/tokens.css';
 import './App.css';
@@ -28,6 +29,7 @@ function App() {
   const [panel, setPanel] = useState<PanelId>(null);
   const [drawer, setDrawer] = useState<DrawerType>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const closePanel = useCallback(() => setPanel(null), []);
 
@@ -40,6 +42,17 @@ function App() {
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
 
   if (isLoading) return <div className="dz-loading">大周日暮录</div>;
+
+  if (showWelcome) {
+    return (
+      <WelcomePage
+        onNewGame={async () => { setShowWelcome(false); }}
+        onLoadGame={() => { setShowSettings(true); setShowWelcome(false); }}
+        onSettings={() => { setShowSettings(true); setShowWelcome(false); }}
+        onChangelog={() => {}}
+      />
+    );
+  }
 
   return (
     <NotificationCenter>
