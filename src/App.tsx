@@ -45,20 +45,17 @@ function App() {
 
   if (isLoading) return <div className="dz-loading">大周日暮录</div>;
 
-  if (showWelcome) {
-    return (
-      <WelcomePage
-        onNewGame={() => { setShowWelcome(false); }}
-        onLoadGame={() => { setShowArchive(true); }}
-        onSettings={() => { setShowSettings(true); }}
-        onChangelog={() => {}}
-      />
-    );
-  }
-
   return (
     <NotificationCenter>
-      <div className="dz-root">
+      {showWelcome ? (
+        <WelcomePage
+          onNewGame={() => { setShowWelcome(false); }}
+          onLoadGame={() => { setShowArchive(true); }}
+          onSettings={() => { setShowSettings(true); }}
+          onChangelog={() => {}}
+        />
+      ) : (
+        <div className="dz-root">
         <div className="dz-body-row">
           <SideNav onOpenPanel={openPanel} onOpenSettings={() => setShowSettings(true)} theme={theme} onToggleTheme={toggleTheme} />
 
@@ -82,9 +79,13 @@ function App() {
         <BountyModal isOpen={panel === 'bounty'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
         <StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
 
-        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-        {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
-      </div>
+          {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+          {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
+        </div>
+      )}
+      {/* Modals always render regardless of welcome state */}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
     </NotificationCenter>
   );
 }
