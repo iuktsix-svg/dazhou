@@ -93,7 +93,7 @@ export function NewGameFlow({ onStart }: Props) {
       setTimeout(() => setStep('character'), 800);
       return;
     }
-    const t = setTimeout(() => setIntroLine(l => l + 1), introLine === 0 ? 600 : 1800);
+    const t = setTimeout(() => setIntroLine(l => l + 1), introLine === 0 ? 1000 : 3000);
     return () => clearTimeout(t);
   }, [step, introLine]);
 
@@ -127,7 +127,7 @@ export function NewGameFlow({ onStart }: Props) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
+              transition={{ duration: 2, ease: [0.25, 0.1, 0.25, 1] }}
               style={{
                 fontFamily: 'var(--font-title)',
                 fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
