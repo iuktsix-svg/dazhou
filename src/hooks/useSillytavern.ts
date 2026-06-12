@@ -32,6 +32,7 @@ export function useSillytavern() {
   const [isLoading, setIsLoading] = useState(true);
   const [streamingText, setStreamingText] = useState<string>('');
   const [streamingBlocks, setStreamingBlocks] = useState<ParsedBlock[]>([]);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const activeChat = useMemo(
     () => chats.find(c => c.id === activeChatId) || null,
@@ -173,9 +174,10 @@ export function useSillytavern() {
     setStreamingText('');
     setStreamingBlocks([]);
 
+    setLastError(null);
     try {
       const activePreset = presets.find(p => p.id === settings.activePresetId) || presets[0];
-      if (!activePreset) throw new Error('No preset available');
+      if (!activePreset) throw new Error('没有可用的预设，请先创建一个预设。');
 
       const activeBooks = lorebooks.filter(b => activeLorebookIds.includes(b.id));
       const currentVariables = activeChat.variables || {};
@@ -267,6 +269,15 @@ export function useSillytavern() {
       setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
       setStreamingText('');
       setStreamingBlocks([]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('AbortError') || msg.includes('aborted')) {
+        // User cancelled — not an error
+      } else if (msg.includes('API error') || msg.includes('fetch')) {
+        setLastError(`API 请求失败：${msg}`);
+      } else {
+        setLastError(`发送失败：${msg}`);
+      }
     } finally {
       setIsSending(false);
       abortRef.current = null;
@@ -349,6 +360,8 @@ export function useSillytavern() {
     streamingText,
     streamingBlocks,
     gameBlocks,
+    lastError,
+    clearError: () => setLastError(null),
     // Actions
     loadAll,
     toggleLorebook,

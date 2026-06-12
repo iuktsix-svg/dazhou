@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useSillytavern } from './hooks/useSillytavern';
 import { SideNav } from './components/SideNav';
 import { StoryArea } from './components/StoryArea';
@@ -13,7 +13,7 @@ import { MapModal } from './components/Modals/MapModalV2';
 import { StorageModal } from './components/Modals/StorageModalV2';
 import { SettingsModal } from './components/SillyTavern/SettingsModal';
 import { ChatModal } from './components/SillyTavern/ChatModal';
-import { NotificationCenter } from './components/NotificationCenter';
+import { NotificationCenter, useNotify } from './components/NotificationCenter';
 import './styles/tokens.css';
 import './App.css';
 
@@ -22,12 +22,21 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 type DrawerType = 'realm' | 'status' | 'martial' | null;
 
 function App() {
-  const { isLoading, activeChat, chats, isSending, sendMessage, cancelGeneration, streamingText } = useSillytavern();
+  const { isLoading, activeChat, chats, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError } = useSillytavern();
+  const { notify } = useNotify();
   const [page, setPage] = useState<PageId>('story');
   const [panel, setPanel] = useState<PanelId>(null);
   const [drawer, setDrawer] = useState<DrawerType>(null);
 
   const closePanel = useCallback(() => setPanel(null), []);
+
+  // Watch for API errors
+  useEffect(() => {
+    if (lastError) {
+      notify({ type: 'error', title: '发送失败', message: lastError, duration: 6000 });
+      clearError();
+    }
+  }, [lastError, notify, clearError]);
   const openDrawer = useCallback((d: DrawerType) => { setDrawer(d); if (d) setPanel(null); }, []);
   const openPanelWithAccordion = useCallback((p: PanelId) => { setPanel(p); setDrawer(null); }, []);
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
