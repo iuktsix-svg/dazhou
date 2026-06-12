@@ -13,14 +13,14 @@ export function MapModal({ isOpen, onClose, onSend }: Props) {
       zoomControl: true, attributionControl: false,
     });
 
-    // Clean light tiles with dark filter
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    // No-label tiles — pure geography, no English text to break wuxia immersion
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd', maxZoom: 19,
     }).addTo(map);
 
-    // Dark filter — subtle sepia + dim for atmosphere
+    // Warm muted tone filter
     const tp = map.getPane('tilePane');
-    if (tp) tp.style.filter = 'brightness(0.35) saturate(0.3) sepia(0.4) contrast(1.2)';
+    if (tp) tp.style.filter = 'brightness(0.4) saturate(0.25) sepia(0.5) contrast(1.1)';
 
     // Marker factory
     const mk = (color: string, size = 10) => L.divIcon({
