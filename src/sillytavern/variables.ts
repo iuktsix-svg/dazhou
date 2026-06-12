@@ -44,13 +44,41 @@ export function extractVariables(rawText: string): VariableExtraction {
 
 /**
  * Merge new variable updates into existing variables.
- * New values overwrite existing keys.
+ * - Simple keys: shallow replace (old value completely replaced)
+ * - Dot-separated paths (e.g. "武林榜单与悬赏.追杀榜"): deep set into nested object
+ * - Array values: auto-parsed from JSON string if possible
  */
 export function mergeVariables(
   current: Record<string, string | number>,
   updates: Record<string, string | number>,
 ): Record<string, string | number> {
-  return { ...current, ...updates };
+  const result = JSON.parse(JSON.stringify(current)); // deep clone
+
+  for (const [key, value] of Object.entries(updates)) {
+    // Try to parse JSON array/object values
+    let parsedValue: string | number | object = value;
+    if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+      try { parsedValue = JSON.parse(value); } catch { /* keep as string */ }
+    }
+
+    if (key.includes('.')) {
+      // Deep path — e.g. "武林榜单与悬赏.追杀榜" → result.武林榜单与悬赏.追杀榜 = parsedValue
+      const parts = key.split('.');
+      let obj: Record<string, unknown> = result as unknown as Record<string, unknown>;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!obj[parts[i]] || typeof obj[parts[i]] !== 'object') {
+          obj[parts[i]] = {};
+        }
+        obj = obj[parts[i]] as Record<string, unknown>;
+      }
+      obj[parts[parts.length - 1]] = parsedValue;
+    } else {
+      // Simple key — full replace
+      (result as Record<string, unknown>)[key] = parsedValue;
+    }
+  }
+
+  return result;
 }
 
 /**
