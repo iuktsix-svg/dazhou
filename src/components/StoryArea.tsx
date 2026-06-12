@@ -26,8 +26,10 @@ export function StoryArea({ messages, streamingText, isStreaming, onOption }: Pr
   const { settings } = useSillytavern();
   const stripTags = settings?.stripTags || ['thinking', 'think', 'sum', 'vars'];
 
-  const last = [...messages].reverse().find(m => m.role === ASSISTANT_ROLE);
-  const rawText = (isStreaming && streamingText) ? streamingText : (last?.content || '');
+  const lastAssistant = [...messages].reverse().find(m => m.role === ASSISTANT_ROLE);
+  const lastAny = messages.length > 0 ? messages[messages.length - 1] : null;
+  // Show assistant message if available, otherwise show the user's opening message
+  const rawText = (isStreaming && streamingText) ? streamingText : (lastAssistant?.content || lastAny?.content || '');
 
   let cleanText = rawText
     .replace(/<maintext>/gi, '').replace(/<\/maintext>/gi, '')
