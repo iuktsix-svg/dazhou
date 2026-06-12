@@ -221,6 +221,10 @@ export function useSillytavern() {
       const updatedMessages = [...targetChat.messages, userMessage];
       let updatedChat = { ...targetChat, messages: updatedMessages, updatedAt: Date.now() };
 
+      // 立刻保存用户消息到 DB 和 state，确保即使 API 失败开场白也不丢失
+      await saveChat(updatedChat);
+      setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
+
       // Assemble prompt
       const { messages: promptMessages } = assemblePrompt({
         userInput: content,
