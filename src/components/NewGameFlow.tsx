@@ -28,13 +28,15 @@ const INTRO_TEXT = [
 ];
 
 export function NewGameFlow({ onStart }: Props) {
-  const { createChat, sendMessage } = useSillytavern();
+  const { createChat, sendMessage, isLoading } = useSillytavern();
   const [step, setStep] = useState<Step>('intro');
   const [introLine, setIntroLine] = useState(0);
   const [gender, setGender] = useState<'男' | '女' | '其他'>('男');
   const [desc, setDesc] = useState('');
   const [name, setName] = useState('');
   const [pendingOpening, setPendingOpening] = useState<{ text: string; id: number } | null>(null);
+
+  if (isLoading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--wx-paper)', fontFamily: 'var(--font-title)', fontSize: 'var(--text-xl)', color: 'var(--wx-vermillion)' }}>加载中…</div>;
 
   useEffect(() => {
     if (step !== 'intro') return;
