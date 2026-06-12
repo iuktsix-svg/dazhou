@@ -15,6 +15,7 @@ import { BountyModal } from './components/Modals/BountyModal';
 import { StorageModal } from './components/Modals/StorageModalV2';
 import { SettingsModal } from './components/SillyTavern/SettingsModal';
 import { WelcomePage } from './components/WelcomePage';
+import { ArchiveModal } from './components/ArchiveModal';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
 import './styles/tokens.css';
 import './App.css';
@@ -30,6 +31,7 @@ function App() {
   const [drawer, setDrawer] = useState<DrawerType>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
+  const [showArchive, setShowArchive] = useState(false);
 
   const closePanel = useCallback(() => setPanel(null), []);
 
@@ -47,7 +49,7 @@ function App() {
     return (
       <WelcomePage
         onNewGame={async () => { setShowWelcome(false); }}
-        onLoadGame={() => { setShowSettings(true); setShowWelcome(false); }}
+        onLoadGame={() => { setShowArchive(true); setShowWelcome(false); }}
         onSettings={() => { setShowSettings(true); setShowWelcome(false); }}
         onChangelog={() => {}}
       />
@@ -81,6 +83,7 @@ function App() {
         <StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
 
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+        {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} />}
       </div>
     </NotificationCenter>
   );
