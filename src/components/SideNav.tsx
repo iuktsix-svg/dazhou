@@ -40,7 +40,7 @@ export function SideNav({ onOpenPanel, onOpenSettings, theme, onToggleTheme }: P
         <Settings className="dz-nav-icon" strokeWidth={1.5} />
         <span className="dz-nav-label">设置</span>
       </button>
-      <div className="dz-nav-version">v3</div>
+      <div className="dz-nav-version">v1.0</div>
     </nav>
   );
 }
