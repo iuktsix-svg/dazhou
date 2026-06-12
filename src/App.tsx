@@ -16,6 +16,7 @@ import { StorageModal } from './components/Modals/StorageModalV2';
 import { SettingsModal } from './components/SillyTavern/SettingsModal';
 import { WelcomePage } from './components/WelcomePage';
 import { ArchiveModal } from './components/ArchiveModal';
+import { ChangelogModal } from './components/ChangelogModal';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
 import './styles/tokens.css';
 import './App.css';
@@ -32,6 +33,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showArchive, setShowArchive] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
 
   const closePanel = useCallback(() => setPanel(null), []);
 
@@ -52,7 +54,7 @@ function App() {
           onNewGame={() => { setShowWelcome(false); }}
           onLoadGame={() => { setShowArchive(true); }}
           onSettings={() => { setShowSettings(true); }}
-          onChangelog={() => {}}
+          onChangelog={() => { setShowChangelog(true); }}
         />
       ) : (
         <div className="dz-root">
@@ -86,6 +88,7 @@ function App() {
       {/* Modals always render regardless of welcome state */}
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
+      {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
     </NotificationCenter>
   );
 }
