@@ -10,13 +10,14 @@ import { BagModal } from './components/Modals/BagModalV2';
 import { NewsModal } from './components/Modals/NewsModalV2';
 import { LeaderboardModal } from './components/Modals/LeaderboardModalV2';
 import { MapModal } from './components/Modals/MapModalV2';
+import { BountyModal } from './components/Modals/BountyModal';
 import { StorageModal } from './components/Modals/StorageModalV2';
 import { SettingsModal } from './components/SillyTavern/SettingsModal';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
 import './styles/tokens.css';
 import './App.css';
 
-type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 'storage' | null;
+type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 'storage' | 'bounty' | null;
 type DrawerType = 'realm' | 'status' | 'martial' | null;
 
 function App() {
@@ -61,6 +62,7 @@ function App() {
         <NewsModal isOpen={panel === 'news'} onClose={closePanel} />
         <LeaderboardModal isOpen={panel === 'leaderboard'} onClose={closePanel} />
         <MapModal isOpen={panel === 'map'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
+        <BountyModal isOpen={panel === 'bounty'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
         <StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
 
         {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}

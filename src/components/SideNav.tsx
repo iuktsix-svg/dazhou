@@ -1,13 +1,14 @@
-import { Settings, Users, Newspaper, Trophy, Map } from 'lucide-react';
+import { Settings, Users, Newspaper, Trophy, Map, Crosshair } from 'lucide-react';
 
 const PANEL_BTNS = [
   { id: 'contacts' as const, label: '人脉', icon: Users },
   { id: 'news' as const, label: '情报', icon: Newspaper },
   { id: 'leaderboard' as const, label: '榜单', icon: Trophy },
+  { id: 'bounty' as const, label: '悬赏', icon: Crosshair },
   { id: 'map' as const, label: '地图', icon: Map },
 ];
 
-type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map';
+type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 'bounty';
 
 interface Props {
   onOpenPanel: (panel: PanelId) => void;
