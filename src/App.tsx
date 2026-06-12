@@ -47,8 +47,8 @@ function App() {
   const openPanel = useCallback((p: PanelId) => { setPanel(p); setDrawer(null); }, []);
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
 
-  // Reload chats when entering game from welcome
-  useEffect(() => { if (!showWelcome && !showNewGame) loadAll(); }, [showWelcome, showNewGame]);
+  // Reload data when entering main game
+  useEffect(() => { if (!showWelcome && !showNewGame && !isLoading) loadAll(); }, [showWelcome, showNewGame, isLoading]);
 
   if (isLoading) return <div className="dz-loading">大周日暮录</div>;
 
