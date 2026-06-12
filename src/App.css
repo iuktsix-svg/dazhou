@@ -179,7 +179,7 @@
    ============================================================ */
 .dz-overlay {
   position: fixed; inset: 0; z-index: var(--z-overlay);
-  background: rgba(44,36,22,0.5); backdrop-filter: blur(3px);
+  background: rgba(44,36,22,0.55);
   opacity: 0; pointer-events: none; transition: opacity 0.3s;
 }
 .dz-overlay.on { opacity: 1; pointer-events: auto; }
