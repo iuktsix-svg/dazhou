@@ -12,8 +12,7 @@ dist
 dist-ssr
 *.local
 
-# Lorebook data (large game content files)
-src/lorebooks/*.json
+# Lorebook backups
 src/lorebooks/*.bak
 *.jpg
 *_resized.png
