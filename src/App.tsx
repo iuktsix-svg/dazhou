@@ -26,7 +26,7 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 type DrawerType = 'realm' | 'status' | 'martial' | null;
 
 function App() {
-  const { isLoading, activeChat, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, loadAll } = useSillytavern();
+  const { isLoading, activeChat, chats, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, setActiveChatId } = useSillytavern();
   const { notify } = useNotify();
   const { theme, toggle: toggleTheme } = useTheme();
   const [panel, setPanel] = useState<PanelId>(null);
@@ -47,11 +47,13 @@ function App() {
   const openPanel = useCallback((p: PanelId) => { setPanel(p); setDrawer(null); }, []);
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
 
-  // Reload data once when entering main game
-  const [entered, setEntered] = useState(false);
+  // Auto-select first chat when entering main game with chats but no active
   useEffect(() => {
-    if (!showWelcome && !showNewGame && !entered) { loadAll(); setEntered(true); }
-  }, [showWelcome, showNewGame, entered]);
+    if (!showWelcome && !showNewGame && chats.length > 0 && !activeChat) {
+      // The most recent chat (first in the list) was just created by NewGameFlow
+      setActiveChatId(chats[0].id);
+    }
+  }, [showWelcome, showNewGame, chats, activeChat]);
 
   if (isLoading) return <div className="dz-loading">大周日暮录</div>;
 

@@ -67,13 +67,6 @@ export function useSillytavern() {
     const activeIds = s?.activeLorebookIds?.length ? s.activeLorebookIds : l.map(b => b.id);
     setActiveLorebookIds(activeIds);
     setChats(c);
-    // Auto-select most recent chat if none active
-    console.log('[loadAll] chats:', c.length, 'activeChatId:', activeChatId);
-    if (c.length > 0) {
-      const msgs = c[0].messages?.length || 0;
-      console.log('[loadAll] first chat:', c[0].name, 'msgs:', msgs);
-      if (!activeChatId) { setActiveChatId(c[0].id); console.log('[loadAll] auto-selected:', c[0].id); }
-    }
     setIsLoading(false);
   }, []);
 
@@ -435,6 +428,7 @@ export function useSillytavern() {
     clearError: () => setLastError(null),
     // Actions
     loadAll,
+    setActiveChatId,
     toggleLorebook,
     updateSettings,
     createChat,
