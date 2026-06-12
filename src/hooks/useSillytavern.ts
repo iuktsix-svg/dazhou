@@ -55,8 +55,8 @@ export function useSillytavern() {
     setActiveLorebookIds(s?.activeLorebookIds || []);
     // Auto-create demo chat if none exist OR all chats have no variables
     const hasData = c.some(chat => chat.variables && Object.keys(chat.variables).length > 5);
+    console.log('[demo] hasData:', hasData, 'chats:', c.length, 'keys:', c[0] ? Object.keys(c[0].variables || {}).length : 0);
     if (!hasData) {
-      // Clear old empty chats
       for (const old of c) { try { await deleteChat(old.id); } catch {} }
       const demoChat: ChatSession = {
         id: crypto.randomUUID(),
@@ -66,10 +66,11 @@ export function useSillytavern() {
         userName: s?.userName || '无名',
         presetId: s?.activePresetId || p[0]?.id || null,
         lorebookIds: [...(s?.activeLorebookIds || [])],
-        variables: DEMO_VARIABLES as Record<string, string | number>,
+        variables: JSON.parse(JSON.stringify(DEMO_VARIABLES)), // deep clone for IndexedDB
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
+      console.log('[demo] creating chat with', Object.keys(demoChat.variables).length, 'variable keys');
       await saveChat(demoChat);
       c = [demoChat];
       setActiveChatId(demoChat.id);
