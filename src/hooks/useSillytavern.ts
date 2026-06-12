@@ -53,10 +53,13 @@ export function useSillytavern() {
     setPresets(p);
     setSettings(s || null);
     setActiveLorebookIds(s?.activeLorebookIds || []);
-    // Auto-create demo chat if none exist OR all chats have no variables
-    const hasData = c.some(chat => chat.variables && Object.keys(chat.variables).length > 5);
-    console.log('[demo] hasData:', hasData, 'chats:', c.length, 'keys:', c[0] ? Object.keys(c[0].variables || {}).length : 0);
-    if (!hasData) {
+    // Auto-create demo chat if no chat has nested demo data
+    const hasDemo = c.some(chat => {
+      const v = chat.variables as Record<string, unknown> || {};
+      return typeof v['主角状态'] === 'object' && typeof v['系统与时辰'] === 'object';
+    });
+    console.log('[demo] hasDemo:', hasDemo, 'chats:', c.length);
+    if (!hasDemo) {
       for (const old of c) { try { await deleteChat(old.id); } catch {} }
       const demoChat: ChatSession = {
         id: crypto.randomUUID(),
