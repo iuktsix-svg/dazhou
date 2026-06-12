@@ -4,235 +4,279 @@ import 'leaflet/dist/leaflet.css';
 
 interface Props { isOpen: boolean; onClose: () => void; onSend: (text: string) => void; }
 
-interface CharInfo { name: string; info: string; }
+interface CharInfo { name: string; title?: string; detail: string; }
 interface LocData {
   lat: number; lng: number; color: string; size: number; name: string;
   title: string; desc: string; chars: CharInfo[]; factionNote?: string;
 }
 
 const LOCATIONS: LocData[] = [
-  // ============ 京畿 ============
-  { lat: 34.62, lng: 112.45, color: '#ff4444', size: 16, name: '洛阳', title: '京畿 · 洛阳城',
-    desc: '天下之中，大周皇都。烈火烹油的盛世幻梦。宵禁名存实亡，平康坊灯火映照半城，酒楼画舫彻夜营业。',
+  // ═══════════ 京畿 ═══════════
+  { lat: 34.62, lng: 112.45, color: '#ff4444', size: 17, name: '洛阳', title: '京畿 · 洛阳城',
+    desc: '天下之中，大周皇都。烈火烹油的盛世幻梦——宵禁名存实亡，平康坊灯火映照半城。禁军死守城门阻绝流民，城内权贵以西域香料铺地斗富。',
     chars: [
-      { name: '武极（承平帝）', info: '男·82岁·入微境 | 绝世·天纲九重诀·裂鼎定国拳 | 年轻时英武果决，后期沉迷长生丹药，年老昏聩' },
-      { name: '武悼（镇国公）', info: '男·75岁·天人境·太阿录榜首 | 绝世·关山玉龙诀·百龙辟易枪 | 大周军威具象，国之柱石' },
-      { name: '武明空（长公主）', info: '女·65岁·半步天人·凤阁大学士 | 绝世·太玄长明功 | 权力生物，掌握实际批红权' },
-      { name: '沈清昼（醉花阴宗主）', info: '女·66岁·天人境·群芳谱第一 | 绝世·太真明月功·二十四番花信剑 | 广陵沈氏遗孤' },
+      { name: '武极', title: '承平帝', detail: '男 · 82岁 · 入微境（靠秘药吊命）\n内功：绝世·天纲九重诀(大成) | 外功：绝世·裂鼎定国拳(大成) · 绝密·四海平权剑(大成) | 轻功：不传·八荒真龙游(大成)\n年轻时英武果决，率军支持正道剿灭冥血圣教。在位五十年，后期沉迷长生丹药，年老昏聩。借崔玉真之手制造东宫血案，薄情寡义。三招内可爆发逼近绝顶境杀伤力，但之后便气血崩溃。' },
+      { name: '武悼', title: '镇国公 · 太阿录榜首', detail: '男 · 75岁 · 天人境\n内功：绝世·关山玉龙诀(圆满) | 外功：绝世·百龙辟易枪(圆满) | 专属名锋：龙城（名锋卷第二）\n大周军威具象。五十年前正魔大战率三千重甲摧灭冥血圣教主力。北驱草原至狼居胥，西定葱岭。单论正面搏杀天下无出其右。国之柱石，只要他不死，天下无人敢举反旗。龙门大营枯坐二十五年，看着军营被世家蛀虫掏空。' },
+      { name: '武明空', title: '长公主 · 凤阁大学士 · 太阿录第五', detail: '女 · 65岁 · 半步天人\n内功：绝世·太玄长明功(圆满) | 外功：不传·金枝玉叶掌(圆满) · 绝世·探花折枝手(大成)\n权力生物。温和伪装下所有人仅有"有用"和"无用"之分。少女时曾对年轻武极春心萌动，如今只剩失望与厌恶。掌握实际批红权，被视为皇室真正话事人。暗中庇护武玄贞免遭崔玉真毒手。' },
+      { name: '崔玉真', title: '天后 · 清河崔氏嫡女', detail: '女 · 46岁 · 绝顶境\n内功：绝密·浩然正气诀(大成) | 外功：奇绝·金匮掌(大成)\n十年前构陷太子，掀起东宫血案。权力代偿与欲求不满。自以为拿捏武极，实为皇帝制衡世家的活靶子。与崔知命利益深度绑定。' },
+      { name: '沈清昼', title: '醉花阴宗主 · 群芳谱第一', detail: '女 · 66岁 · 天人境\n内功：绝世·太真明月功(圆满) | 外功：绝世·二十四番花信剑(圆满)\n广陵沈氏遗孤，沈清颜胞姐，沈清雁胞姐。群玉台密室挂满幼弟沈清雁画像。每月固定派人往上清宫送妹妹爱吃的糕点，哪怕被原封退回。对维护大周存亡毫无兴趣，专注囤积黄金兵械应对乱世。醉花阴表面是风月场所，实为天下最大情报与暗杀网络。' },
+      { name: '魏九重', title: '控鹤府监正 · 太阿录第四', detail: '男(宦官) · 72岁 · 半步天人\n内功：绝世·天癸残神经(圆满) | 外功：不传·霜降折梅手(圆满)\n笑里藏刀，愚忠皇权。七岁净身入宫，五十岁破境。下达杀人指令如吩咐端糕点。掌握左右司主内功反噬解药，以此绝对控制控鹤府。' },
+      { name: '铁痕', title: '大理寺总捕头 · 太阿录第八', detail: '男 · 68岁 · 半步天人\n内功：绝密·明光守正诀(圆满) | 外功：绝世·狻猊镇狱刀(圆满) · 不传·大巧若拙掌(大成)\n十八岁参与正魔大战，陷于乱军力竭被掩埋。妻儿遭仇家暗杀后性情大变。固守律法，遇世家子弟当街杀人亲自持刀拿人。近年实权遭控鹤府架空，但仍是洛阳城中唯一敢正面硬抗魏九重的人。' },
     ],
-    factionNote: '皇权·凤阁·控鹤府·大理寺·醉花阴 — 洛阳六方制衡。武悼不死，天下无人敢反。',
+    factionNote: '洛阳六方制衡——皇权(武极/崔玉真)↔凤阁(武明空)↔控鹤府(魏九重)↔大理寺(铁痕)↔醉花阴(沈清昼)↔镇国公(武悼)。核心矛盾：武极年老昏聩，崔玉真与崔知命联手架空皇权；武明空掌握批红权暗中庇护武玄贞；魏九重愚忠但掌控暗杀机器；铁痕固守律法但被架空；沈清昼以洛阳为根基囤积黄金兵械，对皇室存亡漠不关心，是最大变数。',
   },
+  // 上清宫
   { lat: 34.75, lng: 112.48, color: '#44dd44', size: 8, name: '上清宫', title: '北邙山 · 上清宫',
-    desc: '沈清颜出家之地。每年沈家忌日在太上老君像前长跪不起。',
-    chars: [{ name: '沈清颜（前天后）', info: '女·64岁·半步天人·群芳谱第五 | 绝世·玉景化劫真经·二十四番花信剑 | 哀莫大于心死' }],
+    desc: '前天后沈清颜出家之地。每年沈家忌日，沈清颜在太上老君像前长跪不起。',
+    chars: [
+      { name: '沈清颜', title: '前天后/废后 · 群芳谱第五', detail: '女 · 64岁 · 半步天人\n内功：绝世·玉景化劫真经(圆满) | 外功：绝世·二十四番花信剑(大成) · 绝密·惊鸿水袖掌(大成)\n广陵沈氏遗孤，沈清昼胞妹。十四岁随武极入宫。十年前亲子自刎于东宫血案，看透武极本质，自请废后出家。哀莫大于心死，对幼弟沈清雁充满愧疚，对姐姐沈清昼亦愧疚。夜半常梦到幼弟沈清雁质问为何不救他。' },
+    ],
+    factionNote: '沈氏三姐弟悲剧核心。沈清昼→上清宫(暗中庇护)←沈清颜。沈清雁之死是三人心结。',
   },
+  // 白马寺
   { lat: 34.70, lng: 112.55, color: '#44dd44', size: 8, name: '白马寺', title: '白马寺',
-    desc: '大慈恩寺在洛阳的耳目。武玄贞常驻于此，白日抄经，夜深练武。',
-    chars: [{ name: '武玄贞', info: '女·20岁·入微境·群芳谱第十八 | 绝世·玉景化劫真经·探花折枝手 | 隐忍克制，清冷孤傲' }],
+    desc: '大慈恩寺在洛阳的耳目。武玄贞常驻于此，白日抄写经文压制波澜，夜深在后院疯狂演练武学发泄愤懑。',
+    chars: [
+      { name: '武玄贞', title: '原皇太女 · 群芳谱第十八', detail: '女 · 20岁 · 入微境\n内功：绝世·玉景化劫真经(大成)（对外以无色禅功伪装） | 外功：绝世·探花折枝手(大成)\n十年前壬子事变，14岁自请废去皇室封号保全弟弟武玄真。隐忍克制，清冷孤傲。通过白马寺与母亲裴素仪保持隐秘联系，暗中保护东宫中的弟弟。视武玄真为世上最后牵挂。武明空暗中庇护她免遭崔玉真毒手。' },
+    ],
+    factionNote: '武玄贞↔裴素仪↔武明空 隐秘保护链。武玄贞+武玄真 姐弟相依为命。',
   },
 
-  // ============ 关中 ============
-  { lat: 34.26, lng: 108.94, color: '#ff8800', size: 15, name: '长安', title: '关中 · 长安城',
-    desc: '前唐旧都，丝路起点，胡汉同饮。秦王府坐镇关中，与凉国公、西域都护组成西北秘盟。',
+  // ═══════════ 关中 ═══════════
+  { lat: 34.26, lng: 108.94, color: '#ff8800', size: 16, name: '长安', title: '关中 · 长安城',
+    desc: '前唐旧都，丝路起点，胡汉同饮。秦王府坐镇关中，每年足额上贡掩盖扩军。与凉国公、西域都护组成西北秘盟。',
     chars: [
-      { name: '武承疆（秦王）', info: '男·65岁·宗师境 | 不传·太公阴符经·破阵霸王枪 | 沉稳内敛，每年足额上贡掩盖扩军' },
-      { name: '武玄策（世子）', info: '男·28岁·绝顶境·渭水大营统领 | 十八岁隐姓走河西，治军严苛' },
-      { name: '武红妆（郡主）', info: '女·25岁·入微境 | 绝密·破阵霸王枪(小成) | 十岁烧女戒跑进军营' },
+      { name: '武承疆', title: '秦王', detail: '男 · 65岁 · 宗师境\n内功：不传·太公阴符经(大成) | 外功：绝密·破阵霸王枪(大成) · 奇绝·陌刀三十六斩(圆满)\n沉稳内敛，不怒自威。每年足额上贡掩盖扩军意图。与凉国公蓝岳、西域大都护安镇疆组成西北秘盟——图谋中原生变时出函谷关直取洛阳。' },
+      { name: '武玄策', title: '世子 · 渭水大营统领', detail: '男 · 28岁 · 绝顶境\n十八岁隐瞒身份随龙门镖局走河西走廊，斩杀马匪摸清走私暗桩。治军严苛，与士卒同食糙饼。被视为西北秘盟下一代军事核心。' },
+      { name: '武红妆', title: '郡主', detail: '女 · 25岁 · 入微境\n外功：绝密·破阵霸王枪(小成)\n天真烂漫，豪迈洒脱。十岁烧掉女戒跑进军营。对秦王府暗中的造反勾当毫不知情。常因进不了群芳谱与惊蛰榜而气闷。' },
+      { name: '李克悲', title: '归义公 · 朱邪李氏', detail: '男 · 72岁 · 绝顶境（衰落至通明巅峰）\n内功：绝世·晋阳遗恨经(初学) | 前唐正朔，名存实亡。青年强修绝世武学留暗伤。唯盼为独女李青霓寻根骨绝佳之上门赘婿以续香火。' },
+      { name: '李青霓', title: '惊蛰榜第八 · 群芳谱第三十六', detail: '女 · 22岁 · 入微境\n外功：不传·鸦军泣血枪(小成)\n一心尚武，枪法冷硬凌厉。在专心熬汤药或缝补旧衣时流露温婉居家气质。偷偷将群芳谱上自己的香艳评语剪下夹在枕边兵书里。' },
+      { name: '霍饮冰', title: '龙门镖局总镖头', detail: '男 · 50岁 · 绝顶境\n退伍老兵，极度务实。拿钱卖命，和气生财。手下战死亲自登门送抚恤银。龙门镖局为西北秘盟的物资运输与情报传递网络。' },
     ],
-    factionNote: '秦王府·朱邪李氏·龙门镖局 — 西北秘盟核心。图谋中原生变时出函谷关直取洛阳。',
+    factionNote: '西北秘盟核心——秦王(武承疆)↔凉国公(蓝岳)↔西域都护(安镇疆)↔龙门镖局(霍饮冰)，四环联动。朱邪李氏(李克悲/李青霓)表面依附实为观望。函谷关+散关一线为进军洛阳的战略关口。',
   },
-  { lat: 33.95, lng: 108.95, color: '#44dd44', size: 12, name: '终南山', title: '终南山 · 太玄观',
-    desc: '道门正宗，上三门。五峰建制，底蕴深不可测。',
+  { lat: 33.95, lng: 108.95, color: '#44dd44', size: 13, name: '终南山', title: '终南山 · 太玄观',
+    desc: '道门正宗，上三门，五峰建制。天人1位 · 半步天人3位 · 宗师7位 · 绝顶32位。',
     chars: [
-      { name: '张道玄（观主）', info: '男·156岁·天人境 | 绝世·先天一气诀·太始无极剑 | 六岁入观，百岁入天人，清静寡欲' },
-      { name: '顾青锋', info: '男·26岁·入微境·神霄峰真传 | 过目不忘，精通唇语伪装' },
-      { name: '宋皎', info: '女·22岁·入微境·群芳谱第四十 | 严谨刻板，潜在武痴。专属名锋：天枢' },
-    ],
-  },
-  { lat: 34.48, lng: 110.09, color: '#44dd44', size: 12, name: '华山', title: '华山 · 天剑阁',
-    desc: '天下第一剑派，上三门，杀伐第一。出剑只攻不守。',
-    chars: [
-      { name: '裴南屏（剑主）', info: '女·128岁·天人境·群芳谱第三 | 绝世·裁天剑心决·无我剑典 | 百年前拒斥联姻持剑杀出裴氏' },
-      { name: '陆涯', info: '男·26岁·入微境·惊蛰榜第三 | 太行山猎户出身，天生神力' },
-      { name: '叶惊秋', info: '女·21岁·入微境·惊蛰榜第五 | 嗜酒懂行，贪吃剑痴。专属名锋：掠影' },
+      { name: '张道玄', title: '观主', detail: '男 · 156岁 · 天人境\n内功：绝世·先天一气诀(圆满) | 外功：绝世·太始无极剑(圆满)\n六岁入观，百岁入天人。清静寡欲，古井无波。对帝王与道童礼数言辞均等。气机感知十里。常遣使问长生，皆以闭关谢绝。' },
+      { name: '顾青锋', title: '神霄峰真传', detail: '男 · 26岁 · 入微境\n幼年关中流民。过目不忘，精通唇语伪装。脱下道袍混迹市井酒肆刺探情报。' },
+      { name: '宋皎', title: '天枢峰真传 · 群芳谱第四十', detail: '女 · 22岁 · 入微境\n专属名锋：天枢 | 严谨刻板，因果两清，潜在武痴。纠正男弟子动作直接上手捏拿肩背腰腹，认为练武与男女大防是两码事。曾带酒去终南山找宋皎切磋被拒——其实是叶惊秋找她，她拒了。' },
     ],
   },
-
-  // ============ 中原 ============
-  { lat: 34.80, lng: 114.35, color: '#ff8800', size: 15, name: '开封', title: '中原 · 开封城',
-    desc: '九州腹地，旱魃千里。官道野狗啃食无名尸骸，市集易子换粮。梁王以江南牛乳喂斗犬。',
+  { lat: 34.48, lng: 110.09, color: '#44dd44', size: 13, name: '华山', title: '华山 · 天剑阁',
+    desc: '天下第一剑派，上三门，杀伐第一。天人1位 · 半步天人2位 · 宗师6位 · 绝顶40位。出剑只攻不守。',
     chars: [
-      { name: '武延秀（梁王）', info: '男·55岁·绝顶境(虚浮) | 绝密·大欢喜极乐功 | 穷奢极欲，截留修堤专款建纳凉楼' },
-      { name: '乔镇岳（丐帮帮主）', info: '男·78岁·天人境·定海神针 | 绝世·擒龙诀·降龙十八掌 | 天下刚猛第一掌' },
-      { name: '唐慈音（无生老母）', info: '女·68岁·半步天人·群芳谱第四 | 绝世·真空无生经 | 极致利己，草菅人命' },
+      { name: '裴南屏', title: '剑主 · 群芳谱第三', detail: '女 · 128岁 · 天人境\n内功：绝世·裁天剑心决(圆满) | 外功：绝世·无我剑典(圆满)\n河东裴氏除名旁支。百年前拒斥联姻持剑杀出裴氏。心如止水，杀伐果决。出剑只攻不守，完全放弃护体真气。听闻自己入群芳谱第三席面容毫无波动。' },
+      { name: '陆涯', title: '洗剑池真传 · 惊蛰榜第三', detail: '男 · 26岁 · 入微境\n太行山猎户出身，天生神力。赤裸上身常驻寒潭，言语极简。以肉身强抗绝顶境罡气而不死。' },
+      { name: '叶惊秋', title: '论剑台真传 · 惊蛰榜第五 · 群芳谱第三十八', detail: '女 · 21岁 · 入微境\n专属名锋：掠影（名锋卷第二十四）| 嗜酒懂行，贪吃剑痴。千杯不醉，一握剑柄酒气瞬间散尽。曾带酒去终南山找宋皎切磋被拒，至今耿耿于怀。' },
     ],
-    factionNote: '梁王府·丐帮总舵·白莲教总坛 — 三方角力。旱灾与黄河决堤危机叠加。',
+    factionNote: '裴南屏虽出自河东裴氏但已除名百年，与裴氏无往来。天剑阁保持中立，专注剑道。',
   },
 
-  // ============ 河朔 ============
-  { lat: 37.87, lng: 112.55, color: '#ff8800', size: 15, name: '晋阳', title: '河朔 · 晋阳城',
-    desc: '北方屏障，全城巨石包砖。囤积十年粮草军械，街道布局如兵营。',
+  // ═══════════ 中原 ═══════════
+  { lat: 34.80, lng: 114.35, color: '#ff8800', size: 16, name: '开封', title: '中原 · 开封城',
+    desc: '九州腹地，旱魃千里。官道野狗啃食无名尸骸，市集易子换粮。城内酒楼夜夜笙歌，梁王以江南牛乳喂养斗犬。黄河大堤面临决堤。',
     chars: [
-      { name: '武骧（晋王）', info: '男·62岁·宗师境 | 不传·问鼎龙枪(圆满) | 跋扈骄横，截留河朔盐铁税' },
-      { name: '武青鸾', info: '女·24岁·入微境·晋王庶女 | 心思玲珑，暗掌晋商网络，筹谋退路' },
+      { name: '武延秀', title: '梁王', detail: '男 · 55岁 · 绝顶境（靠采补丹药堆砌，真气虚浮）\n内功：绝密·大欢喜极乐功(小成)\n穷奢极欲，男女不忌。截留修缮黄河大堤专款在府内修三层纳凉高楼。' },
+      { name: '谢盈', title: '梁王府主母 · 陈郡谢氏嫡女', detail: '女 · 40岁 · 绝顶境\n内功：不传·东山养气经(大成)\n门阀傲骨。已有十五年未与武延秀同房。每月将库房黄金装入谢氏商队运往金陵，全面筹备南归。' },
+      { name: '乔镇岳', title: '丐帮帮主 · 定海神针', detail: '男 · 78岁 · 天人境\n内功：绝世·擒龙诀(圆满) | 外功：绝世·降龙十八掌(圆满) · 不传·打狗棒法(圆满)\n旱灾孤儿，十岁入丐帮。天下刚猛第一掌。嫉恶如仇，与底层弟子蹲食粗粥。具备一人正面冲散三千重甲步兵方阵的战力。' },
+      { name: '唐慈音', title: '无生老母 · 白莲教主 · 太阿录第十一 · 群芳谱第四', detail: '女 · 68岁 · 半步天人\n内功：绝世·真空无生经(圆满)\n极致利己。温婉慈和其表，草菅人命其里。三十岁趁老教主走火入魔将其毙杀夺位。借灾荒散发符水，囤积生铁打造兵器。' },
+      { name: '白非烟', title: '白莲教核心圣女 · 群芳谱第二十', detail: '女 · 21岁 · 绝顶境 · 太阿录第五十二\n纯善圣洁。三岁时被唐慈音带回总坛。发自真心信仰白莲教义，不知自己是棋子。将唐慈音视为生母。是唐慈音手中最锋利的刀，也是最天真的祭品。' },
     ],
-    factionNote: '晋王府·安北都护府 — "太行阴契"约定洛阳生变时南北夹击。',
+    factionNote: '开封四重矛盾——①梁王穷奢极欲vs灾民饿殍遍野(随时民变)；②丐帮守护底层vs白莲教煽动底层(路线之争)；③谢盈暗中转移梁王府财富回金陵(谢氏退路)；④黄河大堤一旦决堤，开封城将成泽国，引爆所有矛盾。白莲教是最大不稳定因素——唐慈音韬光养晦，等待决堤或民变契机一举夺城。',
+  },
+  { lat: 34.48, lng: 112.95, color: '#cc6666', size: 8, name: '嵩山', title: '嵩山 · 白莲教真空总坛',
+    desc: '隐于嵩山隐秘深谷。借灾荒散发符水，囤积生铁打造兵器。',
+    chars: [],
+    factionNote: '白莲教总坛。唐慈音遥控指挥，白非烟为台前圣女。',
   },
 
-  // ============ 燕齐 ============
-  { lat: 39.91, lng: 116.40, color: '#ff8800', size: 13, name: '幽州', title: '燕齐 · 幽州城',
+  // ═══════════ 河朔 ═══════════
+  { lat: 37.87, lng: 112.55, color: '#ff8800', size: 16, name: '晋阳', title: '河朔 · 晋阳城',
+    desc: '北方屏障，全城巨石包砖。囤积十年粮草军械，街道布局如兵营。重利轻义，商帮为争商道雇打手城外野战。',
+    chars: [
+      { name: '武骧', title: '晋王', detail: '男 · 62岁 · 宗师境\n内功：绝密·三晋归流诀(大成) | 外功：不传·问鼎龙枪(圆满)\n跋扈骄横，拥兵自重。截留河朔三州盐铁税。满编八万甲士。与安北都护府贺兰万钧结成"太行阴契"——约定洛阳生变时南北夹击。天衍宗判词：「嗜血贪狼，乱天下者必此人，定天下者决非此人」' },
+      { name: '武天骄', title: '世子 · 大同马场提督', detail: '男 · 30岁 · 绝顶境（靠名贵药浴堆上）\n跋扈好大喜功，僭越行事。截留上等战马组建私兵"天骄卫"。怯于死斗，遇弱则逼、遇强则令亲卫围攻。' },
+      { name: '武青鸾', title: '晋王庶女', detail: '女 · 24岁 · 入微境\n庶女出身，心思玲珑。暗掌晋商网络，暗中转卖盐铺将黄金存入江南谢氏钱庄。筹谋退路——她已看出太行阴契是条不归路。' },
+      { name: '封灵儿', title: '冥血圣教遗女 · 惊蛰榜第三十五 · 群芳谱第五十三', detail: '女 · 21岁 · 入微境\n前教主与村女成婚后生下的女儿。爽朗直率，娇蛮护短。侠女做派，路遇不平定要出手，因此未被正派重视。饭量奇大但胸前平坦，常苦恼为何吃这么多也不见长肉。用黑布蒙面揭大理寺悬赏告示赚赏金。' },
+    ],
+    factionNote: '太行阴契——晋王(武骧)↔安北都护(贺兰万钧)↔大同马场(武天骄)，三环联动。完颜破在大同马场进行军械与战马的实物交接。武青鸾暗中转移资产——她是最可能出卖太行阴契的人。封灵儿虽为冥血圣教遗女但行侠仗义，与晋阳势力无直接关联。',
+  },
+
+  // ═══════════ 燕齐 ═══════════
+  { lat: 39.91, lng: 116.40, color: '#ff8800', size: 14, name: '幽州', title: '燕齐 · 幽州城',
     desc: '御北重镇，海陆贸易繁盛。乾国公府坐镇，清河崔氏与琅琊王氏龙盘虎踞。',
     chars: [
-      { name: '袭天远（乾国公）', info: '男·60岁·宗师境 | 藏锋守拙' },
-      { name: '袭长缨（世子）', info: '男·25岁·绝顶境 | 女扮男装，真龙之资' },
+      { name: '袭天远', title: '乾国公', detail: '男 · 60岁 · 宗师境\n藏锋守拙。手握幽燕铁骑三万，但表面上与世无争。真正的底牌无人知晓。' },
+      { name: '袭长缨', title: '世子', detail: '男 · 25岁 · 绝顶境\n女扮男装十八年——实际上是女子，但武艺胆识远超同辈。真龙之资。' },
+      { name: '袭晚宁', title: '乾国公次女', detail: '女 · 22岁 · 入微境\n人形算盘。过目不忘的数字天赋，将幽州军需账目管理得滴水不漏。' },
     ],
-    factionNote: '乾国公府·清河崔氏·琅琊王氏·天衍宗 — 燕齐四柱。',
+    factionNote: '幽州四柱——乾国公府(袭天远)↔清河崔氏(崔知命)↔琅琊王氏(王道渊)↔天衍宗(姬望舒)。乾国公表面不涉朝争，实为制衡晋王北上的关键屏障。',
   },
-  { lat: 36.25, lng: 117.10, color: '#44dd44', size: 10, name: '泰山', title: '泰山 · 天衍宗',
-    desc: '上三门，术数卜卦，国师坐镇。',
-    chars: [{ name: '姬望舒（宗主/国师）', info: '男·145岁·天人境 | 算尽天机。常遣使问长生，皆以闭关谢绝' }],
-  },
-
-  // ============ 江淮 ============
-  { lat: 32.06, lng: 118.80, color: '#44aaff', size: 13, name: '金陵', title: '江淮 · 金陵城',
-    desc: '财赋重地，纸醉金迷，烟雨江南。陈郡谢氏与江南总督府共治。',
+  { lat: 35.10, lng: 118.35, color: '#ddaa44', size: 11, name: '琅琊', title: '琅琊 · 王氏',
+    desc: '四大世家，天下兵刃铸造之源，东海剑炉。',
     chars: [
-      { name: '谢灵枢（谢氏家主）', info: '男·58岁·宗师境 | 天下财富半出谢氏' },
-      { name: '谢熙光', info: '女·23岁·入微境·群芳谱第十 | 江南第一才女' },
+      { name: '王道渊', title: '王氏家主', detail: '男 · 65岁 · 宗师境\n掌控天下兵器铸造。王氏剑炉所出名锋占名锋卷三分之一。' },
+      { name: '王初霁', title: '群芳谱第十五', detail: '女 · 22岁 · 入微境\n铸剑天才，十五岁独立铸成名锋"寒露"。' },
     ],
-    factionNote: '陈郡谢氏·江南总督府 — 江南双壁，掌握天下水路商道。',
+  },
+  { lat: 37.06, lng: 115.68, color: '#ddaa44', size: 11, name: '清河', title: '清河 · 崔氏',
+    desc: '四大世家之首，天下文官幕后执掌，累世公卿。',
+    chars: [
+      { name: '崔知命', title: '宰相/崔氏家主', detail: '男 · 62岁 · 宗师境\n口蜜腹剑，喜怒不显。闻子死讯写完字帖再下令追查。担任宰相二十余年，将皇权与世家权力平衡到极致。' },
+      { name: '崔婉仪', title: '凤阁制诰秘院掌院 · 群芳谱第八', detail: '女 · 24岁 · 入微境\n端庄内敛，依制封驳天后越权诏书。婚姻为崔氏最高级别政治筹码。' },
+    ],
+    factionNote: '崔知命↔崔玉真(天后) 利益深度绑定。崔婉仪在凤阁为崔氏耳目。崔氏与谢氏是世家双极，暗中争夺朝堂话语权。',
   },
 
-  // ============ 荆襄 ============
-  { lat: 32.04, lng: 112.14, color: '#ff8800', size: 13, name: '襄阳', title: '荆襄 · 襄阳城',
+  // ═══════════ 江淮 ═══════════
+  { lat: 32.06, lng: 118.80, color: '#44aaff', size: 14, name: '金陵', title: '江淮 · 金陵城',
+    desc: '财赋重地，纸醉金迷，烟雨江南。陈郡谢氏与江南总督府共治，掌握天下水路商道。',
+    chars: [
+      { name: '谢灵枢', title: '谢氏家主', detail: '男 · 58岁 · 宗师境\n天下财富半出谢氏。通过飞票系统掌控全国银根。暗中囤积黄金兵械应对乱世——与沈清昼不谋而合。' },
+      { name: '谢熙光', title: '群芳谱第十', detail: '女 · 23岁 · 入微境\n江南第一才女。琴棋书画无一不精，更精于商道——将谢氏丝绸通过海路远销南洋西洋。' },
+      { name: '王景之', title: '江南总督', detail: '男 · 55岁 · 宗师境\n朝廷派驻江南的最高军事长官。与谢氏维持表面和睦，实则各怀鬼胎。' },
+    ],
+    factionNote: '金陵双极——谢氏(经济)↔江南总督(军事)，表面和睦实则博弈。谢灵枢与洛阳沈清昼暗中联络，共同囤积黄金兵械应对乱世。谢盈从开封转移梁王府黄金→金陵谢氏钱庄，是谢氏最重要的退路布局之一。',
+  },
+
+  // ═══════════ 荆襄 ═══════════
+  { lat: 32.04, lng: 112.14, color: '#ff8800', size: 14, name: '襄阳', title: '荆襄 · 襄阳城',
     desc: '铁打的襄阳，楚王府坐镇。汉水与长江交汇，天下粮仓。',
     chars: [
-      { name: '武安邦（楚王）', info: '男·68岁·宗师境 | 老谋深算' },
-      { name: '武惊澜（世子）', info: '男·32岁·绝顶境·水师统领' },
+      { name: '武安邦', title: '楚王', detail: '男 · 68岁 · 宗师境\n老谋深算。坐拥天下粮仓，以粮食为筹码在诸王间周旋。既不加入西北秘盟，也不依附太行阴契——左右逢源，待价而沽。' },
+      { name: '武惊澜', title: '世子 · 水师统领', detail: '男 · 32岁 · 绝顶境\n掌控长江中游水师。以水师封锁江面控制漕运咽喉。' },
     ],
+    factionNote: '楚王独善其身，以粮仓+水师为筹码在诸王间左右逢源。不加入任何一方联盟。',
   },
 
-  // ============ 巴蜀 ============
-  { lat: 30.57, lng: 104.07, color: '#44aaff', size: 13, name: '成都', title: '巴蜀 · 成都城',
-    desc: '天府之国，偏安安逸，险阻封闭。民间祭拜武侯远超当朝皇帝。',
+  // ═══════════ 巴蜀 ═══════════
+  { lat: 30.57, lng: 104.07, color: '#44aaff', size: 14, name: '成都', title: '巴蜀 · 成都城',
+    desc: '天府之国，偏安安逸，险阻封闭。民间祭拜武侯远超当朝皇帝。种桑废稻致底层破产流亡入深山。',
     chars: [],
+    factionNote: '青溪门+袍哥会+青城派 三方共治。蜀道艰险，与中原信息隔绝。',
   },
-  { lat: 28.50, lng: 104.50, color: '#44dd44', size: 10, name: '万岭箐', title: '蜀南 · 青溪门',
+  { lat: 28.50, lng: 104.50, color: '#44dd44', size: 11, name: '万岭箐', title: '蜀南 · 青溪门',
     desc: '医武合一，一命一价，下四门。',
     chars: [
-      { name: '水月先生', info: '女·265岁·天人境·群芳谱第二 | 创派祖师，医术通天' },
-      { name: '曲南星', info: '女·22岁·入微境·小医仙 | 悬壶济世' },
+      { name: '水月先生', title: '创派祖师 · 群芳谱第二', detail: '女 · 265岁 · 天人境\n医术通天，寿元远超常人。青溪门立派二百年，她始终是那个悬壶济世的"小医仙"。' },
+      { name: '曲南星', title: '当代小医仙', detail: '女 · 22岁 · 入微境\n继承祖师衣钵。悬壶济世，不问江湖恩怨。' },
     ],
   },
 
-  // ============ 雍凉 ============
-  { lat: 37.93, lng: 102.64, color: '#ff8800', size: 13, name: '凉州', title: '雍凉 · 凉州城',
+  // ═══════════ 雍凉 ═══════════
+  { lat: 37.93, lng: 102.64, color: '#ff8800', size: 14, name: '凉州', title: '雍凉 · 凉州城',
     desc: '丝路咽喉，全民皆兵。凉国公府屯重兵把守河西走廊。',
     chars: [
-      { name: '蓝岳（凉国公）', info: '男·62岁·宗师境 | 伪装绝顶境巅峰，实际为西北秘盟重要一环' },
-      { name: '蓝听雪', info: '女·24岁·入微境·互市走马司暗案' },
+      { name: '蓝岳', title: '凉国公', detail: '男 · 62岁 · 宗师境（伪装绝顶境巅峰）\n西北秘盟核心成员。控制河西走廊，阻断西域与中原的军事通道。' },
+      { name: '蓝破阵', title: '镇羌大营主将', detail: '男 · 34岁 · 绝顶境\n凉国公府第一猛将。镇守河西走廊西端，阻挡吐蕃与西域兵锋。' },
+      { name: '蓝听雪', title: '互市走马司暗案', detail: '女 · 24岁 · 入微境\n表面管理丝路互市，实为凉国公情报网络负责人。精通多族语言。' },
     ],
-    factionNote: '凉国公府·关中旧族·陇西李氏 — 西北秘盟西域侧翼。',
+    factionNote: '西北秘盟西域侧翼——凉国公(蓝岳)↔西域都护(安镇疆)↔秦王(武承疆)，三环联动。蓝岳控制河西走廊是西北秘盟的战略纵深。',
+  },
+  // 世家
+  { lat: 34.58, lng: 105.72, color: '#ddaa44', size: 9, name: '天水', title: '天水 · 关中旧族',
+    desc: '韦杜柳薛四姓，丝路走私集散地。', chars: [],
+    factionNote: '关中旧族通过丝路走私与西域都护府暗中交易，是西北秘盟的贸易网络。',
+  },
+  { lat: 35.58, lng: 104.14, color: '#ddaa44', size: 9, name: '陇西', title: '陇西 · 李氏',
+    desc: '前唐皇族后裔，图谋复辟但名存实亡。', chars: [],
+    factionNote: '李朔风(家主·绝顶境)与西北秘盟保持距离，独自经营陇右的复辟大业，但实力不济。',
   },
 
-  // ============ 西域 ============
-  { lat: 42.95, lng: 89.19, color: '#888', size: 13, name: '高昌', title: '西域 · 高昌城',
-    desc: '西域都护府驻地，形同独立王国。安镇疆拥兵自重。',
+  // ═══════════ 西域 ═══════════
+  { lat: 42.95, lng: 89.19, color: '#888', size: 14, name: '高昌', title: '西域 · 高昌城（都护府）',
+    desc: '西域都护府驻地，形同独立王国。安镇疆拥兵自重，割据一方。',
     chars: [
-      { name: '安镇疆（大都护）', info: '男·62岁·半步天人 | 割据一方，不奉洛阳号令' },
-      { name: '安红砂', info: '女·26岁·入微境巅峰·惊蛰榜第二' },
+      { name: '安镇疆', title: '大都护 · 半步天人', detail: '男 · 62岁 · 半步天人\n西北秘盟成员。控制西域三十六国，不奉洛阳号令。每年只给朝廷象征性贡马。' },
+      { name: '安无常', title: '假子军统帅', detail: '男 · 35岁 · 宗师境\n安镇疆养子。统领三千假子军——都是从西域各国收养的孤儿训练而成的死士。' },
+      { name: '安红砂', title: '惊蛰榜第二', detail: '女 · 26岁 · 入微境巅峰\n安镇疆之女。沙场女将，使一杆赤砂枪。' },
     ],
+    factionNote: '西域都护(安镇疆)↔天山明教(赫连城)微妙共存。安镇疆镇压明教扩张，但允许明教在西域传教以制衡佛教势力。',
   },
-  { lat: 43.50, lng: 85.00, color: '#cc6666', size: 10, name: '天山', title: '天山 · 明教',
-    desc: '拜火教总坛，圣火不灭，教主空悬多年。',
+  { lat: 43.50, lng: 85.00, color: '#cc6666', size: 11, name: '天山', title: '天山 · 明教总坛',
+    desc: '拜火教，圣火不灭，教主空悬多年。',
     chars: [
-      { name: '赫连城（光明左使）', info: '男·65岁·宗师境 | 暂代教主之位' },
-      { name: '夜伽罗（紫月龙王）', info: '女·38岁·绝顶境 | 波斯后裔，精通火器' },
-    ],
-  },
-
-  // ============ 草原 ============
-  { lat: 42.00, lng: 112.00, color: '#888', size: 13, name: '受降城', title: '草原 · 受降城',
-    desc: '安北都护府驻地，漠南军事堡垒。城门外矗立阿史那部头颅京观。',
-    chars: [
-      { name: '贺兰万钧（大都护）', info: '男·58岁·半步天人 | 图谋南下，以夷制夷' },
-      { name: '完颜破', info: '男·45岁·宗师境·军法司统领 | 太行阴契关键人物' },
+      { name: '赫连城', title: '光明左使 · 暂代教主', detail: '男 · 65岁 · 宗师境\n教主空悬多年，赫连城以光明左使身份暂代。与波斯总坛保持联系。' },
+      { name: '夜伽罗', title: '紫月龙王', detail: '女 · 38岁 · 绝顶境\n波斯后裔，精通火器。负责明教与波斯明教总坛的联络。' },
     ],
   },
 
-  // ============ 苗疆 ============
-  { lat: 25.60, lng: 100.23, color: '#44aaff', size: 10, name: '大理', title: '苗疆 · 大理城',
+  // ═══════════ 草原 ═══════════
+  { lat: 42.00, lng: 112.00, color: '#888', size: 14, name: '受降城', title: '草原 · 受降城（安北都护府）',
+    desc: '漠南军事堡垒，城门外矗立阿史那部头颅京观。草原部落遭长期分化打压。',
+    chars: [
+      { name: '贺兰万钧', title: '大都护 · 半步天人', detail: '男 · 58岁 · 半步天人\n太行阴契关键人物。图谋南下——与晋王约定洛阳生变时南北夹击。' },
+      { name: '完颜破', title: '军法司统领', detail: '男 · 45岁 · 宗师境\n太行阴契的具体执行者。在大同马场进行军械与战马的实物交接。' },
+    ],
+    factionNote: '太行阴契——安北都护(贺兰万钧)↔晋王(武骧)，南北夹击洛阳的军事同盟。完颜破是双方交易的具体执行人。',
+  },
+
+  // ═══════════ 苗疆 ═══════════
+  { lat: 25.60, lng: 100.23, color: '#44aaff', size: 11, name: '大理', title: '苗疆 · 大理城',
     desc: '改土归流，土司割据，原始巫蛊。',
     chars: [
-      { name: '沐镇山（黔国公）', info: '男·65岁·宗师境' },
-      { name: '蚩罗（五仙教主）', info: '男·105岁·天人境·闭关神木殿' },
+      { name: '沐镇山', title: '黔国公', detail: '男 · 65岁 · 宗师境\n镇守苗疆。与五仙教维持微妙平衡。' },
+      { name: '阿绫', title: '五仙教圣女', detail: '女 · 22岁 · 入微境\n在中原游历。天真烂漫的外表下深谙蛊术。' },
     ],
   },
 
-  // ============ 岭南 ============
-  { lat: 23.13, lng: 113.26, color: '#44aaff', size: 10, name: '广州', title: '岭南 · 广州城',
-    desc: '万国交汇，远洋海贸枢纽。流放贬谪之所。',
+  // ═══════════ 岭南 ═══════════
+  { lat: 23.13, lng: 113.26, color: '#44aaff', size: 11, name: '广州', title: '岭南 · 广州城',
+    desc: '万国交汇，远洋海贸枢纽。流放贬谪之所，却也商机无限。',
     chars: [
-      { name: '金若水', info: '女·28岁·绝顶境·万国商会总会长' },
-      { name: '冼知机', info: '男·63岁·绝顶境·冼氏家主' },
+      { name: '金若水', title: '万国商会总会长', detail: '女 · 28岁 · 绝顶境\n白手起家，十年内将万国商会打造成横跨南洋西洋的贸易帝国。掌握远洋航线与香料定价权。' },
+      { name: '冼知机', title: '冼氏家主', detail: '男 · 63岁 · 绝顶境\n岭南本地豪族。与万国商会既合作又竞争——冼氏控制陆路，金若水控制海路。' },
     ],
   },
 
-  // ============ 外国区域 ============
-  { lat: 35.5, lng: 137, color: '#e88', size: 15, name: '东瀛', title: '东瀛 · 扶桑诸岛',
-    desc: '倭国，遣唐使往来频繁。剑道与忍术独树一帜。',
-    chars: [
-      { name: '柳生宗严', info: '剑圣·无刀取奥义 | 德川幕府剑术指南' },
-      { name: '服部半藏', info: '忍军头领·影缚术 | 伊贺忍军统帅' },
-    ],
-    factionNote: '德川幕府·伊贺忍军·出云神社 — 三足鼎立。',
-  },
-  { lat: 37.5, lng: 127, color: '#e88', size: 15, name: '高丽', title: '高丽 · 海东之国',
-    desc: '朝鲜半岛，儒学立国，武臣跋扈。',
-    chars: [
-      { name: '崔忠献', info: '武臣首领·花郎道 | 架空王权' },
-      { name: '金允侯', info: '义军将领·弓道·海东剑法 | 抗击蒙古前锋' },
-    ],
-    factionNote: '高丽王室·武臣政权·花郎道场 — 王权旁落。',
-  },
-  { lat: 30, lng: 91, color: '#e88', size: 17, name: '吐蕃', title: '吐蕃 · 雪域高原',
-    desc: '赞普王庭，密宗佛法昌盛，高原铁骑威震西域。',
-    chars: [
-      { name: '松赞干布', info: '赞普·大日如来印 | 统一吐蕃诸部' },
-      { name: '莲花生', info: '密宗上师·金刚伏魔杵 | 桑耶寺主持' },
-      { name: '论钦陵', info: '大论(宰相)·雪域九转 | 吐蕃铁骑统帅' },
-    ],
-    factionNote: '赞普王庭·桑耶寺·苯教祭坛 — 佛苯之争暗流涌动。',
-  },
-  { lat: 5, lng: 118, color: '#e88', size: 15, name: '南洋', title: '南洋 · 万岛之域',
-    desc: '三佛齐·满者伯夷，香料群岛，海盗横行。',
-    chars: [
-      { name: '郑和义', info: '海商魁首·分海刀 | 掌控香料航道' },
-      { name: '陈祖义', info: '海盗王·潜渊诀·鲨咬拳 | 巨蛟帮总瓢把子' },
-    ],
-    factionNote: '三佛齐王朝·巨蛟帮·香料商会 — 海上三国杀。',
-  },
-  { lat: 52, lng: -1, color: '#e88', size: 15, name: '英吉利', title: '英吉利 · 西洋列岛',
-    desc: '骑士王国，东印度公司崛起，火器初兴。',
-    chars: [
-      { name: '亨利八世', info: '国王·骑士剑术 | 与教廷决裂，建立国教' },
-      { name: '德雷克', info: '海盗提督·铳术·炼金术 | 皇家海军传奇' },
-    ],
-    factionNote: '英王王室·东印度公司·圣殿骑士团 — 新旧势力交替。',
-  },
+  // ═══════════ 外国区域 ═══════════
+  { lat: 35.0, lng: 135.8, color: '#e88', size: 12, name: '京都', title: '东瀛 · 京都（平安京）',
+    desc: '倭国都城，天皇御所。仿长安洛阳而建，遣唐使往来频繁。', chars: [
+      { name: '柳生宗严', title: '剑圣', detail: '男 · 德川幕府剑术指南。创无刀取奥义——以空手夺白刃，被誉为东瀛剑道第一人。' },
+      { name: '服部半藏', title: '忍军头领', detail: '男 · 伊贺忍军统帅。影缚术奥义传人。德川幕府的情报与暗杀负责人。' },
+    ], factionNote: '德川幕府·伊贺忍军·出云神社 三足鼎立。' },
+  { lat: 34.7, lng: 135.5, color: '#e88', size: 8, name: '大阪', title: '东瀛 · 大阪（难波）',
+    desc: '东瀛商业中心，丰臣氏根基之地。', chars: [], factionNote: '丰臣氏经营大阪城，与德川幕府暗中角力。' },
+  { lat: 35.3, lng: 139.5, color: '#e88', size: 8, name: '镰仓', title: '东瀛 · 镰仓',
+    desc: '幕府驻地，武士政权中心。', chars: [], factionNote: '镰仓幕府实际统治东瀛，天皇仅为傀儡。' },
+
+  { lat: 37.9, lng: 126.6, color: '#e88', size: 12, name: '开城', title: '高丽 · 开城（王京）',
+    desc: '高丽王都，儒学立国，武臣跋扈架空王权。', chars: [
+      { name: '崔忠献', title: '武臣首领', detail: '男 · 花郎道传人。架空高丽王权，实际掌控国政。以铁腕镇压一切反对势力。' },
+    ], factionNote: '高丽王室 vs 武臣政权 的内斗消耗国力。花郎道场为武臣培养军事人才。' },
+  { lat: 39.0, lng: 125.8, color: '#e88', size: 8, name: '平壤', title: '高丽 · 平壤（西京）',
+    desc: '高丽西京，北防女真的军事重镇。', chars: [], factionNote: '驻守高丽最精锐的北方军团。' },
+
+  { lat: 29.6, lng: 91.1, color: '#e88', size: 17, name: '逻些', title: '吐蕃 · 逻些（拉萨）',
+    desc: '赞普王庭所在，雪域高原圣城。密宗佛法昌盛。', chars: [
+      { name: '松赞干布', title: '赞普', detail: '男 · 统一吐蕃诸部的雄主。大日如来印传人。与大唐、天竺同时维持外交。' },
+      { name: '莲花生', title: '密宗上师', detail: '男 · 桑耶寺主持。金刚伏魔杵奥义。从天竺入藏传播密宗佛法，是吐蕃的精神支柱。' },
+      { name: '论钦陵', title: '大论（宰相）', detail: '男 · 雪域九转功传人。吐蕃铁骑统帅。曾率军深入西域与大唐争夺安西四镇。' },
+    ], factionNote: '赞普王庭·桑耶寺·苯教祭坛 三派共存。佛苯之争暗流涌动——莲花生代表的密宗与本土苯教时有冲突。论钦陵的吐蕃铁骑是大周西域的最大军事威胁。' },
+  { lat: 28.2, lng: 85.0, color: '#e88', size: 8, name: '匹播', title: '吐蕃 · 匹播（尼泊尔门户）',
+    desc: '吐蕃通往天竺的要道。商队与僧侣往来频繁。', chars: [], factionNote: '吐蕃与天竺的文化贸易通道。' },
+
+  { lat: -3.0, lng: 104.7, color: '#e88', size: 12, name: '三佛齐', title: '南洋 · 三佛齐（巨港）',
+    desc: '南洋第一强国，控制马六甲海峡。香料贸易中心。', chars: [
+      { name: '郑和义', title: '海商魁首', detail: '男 · 分海刀传人。掌控香料航道，与万国商会金若水有直接的贸易竞争关系。' },
+    ], factionNote: '三佛齐王朝·满者伯夷·巨蛟帮(陈祖义) 海上三国杀。' },
+  { lat: -7.5, lng: 112.5, color: '#e88', size: 10, name: '满者伯夷', title: '南洋 · 满者伯夷（爪哇）',
+    desc: '新兴海上帝国，挑战三佛齐霸权。', chars: [], factionNote: '与三佛齐争夺马六甲海峡控制权。' },
+  { lat: 2.2, lng: 102.2, color: '#e88', size: 10, name: '马六甲', title: '南洋 · 马六甲',
+    desc: '海峡咽喉，东西方贸易必经之地。', chars: [], factionNote: '海盗与商人共存。巨蛟帮陈祖义常在此出没。' },
+
+  { lat: 51.5, lng: -0.1, color: '#e88', size: 12, name: '伦敦', title: '英吉利 · 伦敦',
+    desc: '英王都城，泰晤士河畔。骑士王国，火器初兴。', chars: [
+      { name: '亨利八世', title: '英王', detail: '男 · 与教廷决裂建立国教。骑士剑术高手。派遣东印度公司探索东方贸易航线。' },
+      { name: '德雷克', title: '海盗提督', detail: '男 · 铳术与炼金术先驱。皇家海军传奇。曾率船队环航世界，劫掠西班牙宝船。' },
+      { name: '艾琳·斯图亚特', title: '女勋爵', detail: '女 · 苏格兰贵族。精通炼金术与古剑术。暗中资助德雷克的远航探险。' },
+    ], factionNote: '英王王室·东印度公司·圣殿骑士团 新旧势力交替。东印度公司探索东方航线可能与广州万国商会产生交集。' },
+  { lat: 53.9, lng: -1.1, color: '#e88', size: 8, name: '约克', title: '英吉利 · 约克',
+    desc: '北方重镇，与苏格兰接壤。', chars: [], factionNote: '英苏边境的军事要塞。' },
 ];
 
-// 势力关系线
-const FACTION_LINES: { from: [number, number]; to: [number, number]; color: string; dash: string; label: string }[] = [
-  { from: [34.62, 112.45], to: [34.26, 108.94], color: '#8b6914', dash: '6,4', label: '皇权vs西北秘盟' },
-  { from: [34.26, 108.94], to: [37.93, 102.64], color: '#8b6914', dash: '6,4', label: '西北秘盟' },
-  { from: [37.93, 102.64], to: [42.95, 89.19], color: '#8b6914', dash: '6,4', label: '西北秘盟西域侧翼' },
-  { from: [37.87, 112.55], to: [42.00, 112.00], color: '#6b3a2a', dash: '4,4', label: '太行阴契' },
-  { from: [32.06, 118.80], to: [34.62, 112.45], color: '#4a6a3a', dash: '3,5', label: '谢氏商道(漕运)' },
-  { from: [32.06, 118.80], to: [23.13, 113.26], color: '#4a6a3a', dash: '3,5', label: '沿海商道' },
-];
-
-// 路线
+// Routes
 const ROUTES: { path: [number, number][]; color: string; dash: string; weight: number; label: string }[] = [
   { path: [[34.62, 112.45], [34.80, 114.35], [32.04, 112.14], [32.06, 118.80], [24.87, 118.68]], color: '#5a7a4a', dash: '8,6', weight: 1.5, label: '大运河-长江漕运' },
   { path: [[34.26, 108.94], [37.93, 102.64], [40.14, 94.66], [42.95, 89.19], [36, 70]], color: '#8a7a4a', dash: '10,6', weight: 1.5, label: '丝绸之路' },
@@ -241,100 +285,57 @@ const ROUTES: { path: [number, number][]; color: string; dash: string; weight: n
   { path: [[23.13, 113.26], [24.87, 118.68], [32.06, 118.80]], color: '#4a6a6a', dash: '5,7', weight: 1, label: '南洋航线' },
   { path: [[34.62, 112.45], [37.87, 112.55], [39.91, 116.40]], color: '#6a5a3a', dash: '6,5', weight: 1.2, label: '北上官道' },
   { path: [[34.26, 108.94], [33.95, 108.95], [30.57, 104.07], [28.50, 104.50]], color: '#6a5a3a', dash: '6,5', weight: 1.2, label: '蜀道' },
+  { path: [[23.13, 113.26], [-3.0, 104.7], [2.2, 102.2]], color: '#4a6a6a', dash: '5,7', weight: 1, label: '西洋航线' },
+];
+
+// Faction lines
+const FACTION_LINES: { from: [number, number]; to: [number, number]; color: string; dash: string }[] = [
+  { from: [34.62, 112.45], to: [34.26, 108.94], color: '#8b6914', dash: '6,4' },
+  { from: [34.26, 108.94], to: [37.93, 102.64], color: '#8b6914', dash: '6,4' },
+  { from: [37.93, 102.64], to: [42.95, 89.19], color: '#8b6914', dash: '6,4' },
+  { from: [37.87, 112.55], to: [42.00, 112.00], color: '#6b3a2a', dash: '4,4' },
+  { from: [32.06, 118.80], to: [34.62, 112.45], color: '#4a6a3a', dash: '3,5' },
+  { from: [34.80, 114.35], to: [34.62, 112.45], color: '#6a4a2a', dash: '3,4' },
+  { from: [42.00, 112.00], to: [40.09, 113.30], color: '#6b3a2a', dash: '4,4' },
 ];
 
 export function MapModal({ isOpen, onClose, onSend }: Props) {
   const [selectedLoc, setSelectedLoc] = useState<LocData | null>(null);
+  const [expandedChar, setExpandedChar] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
+    const map = L.map('dz-leaflet-map', { center: [34.5, 108], zoom: 5, minZoom: 3, maxZoom: 10, zoomControl: true, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+    const tp = map.getPane('tilePane'); if (tp) tp.style.filter = 'brightness(0.4) saturate(0.25) sepia(0.5) contrast(1.1)';
 
-    const map = L.map('dz-leaflet-map', {
-      center: [34.5, 108], zoom: 5, minZoom: 3, maxZoom: 10,
-      zoomControl: true, attributionControl: false,
-    });
+    ROUTES.forEach(r => L.polyline(r.path, { color: r.color, weight: r.weight, opacity: 0.45, dashArray: r.dash }).addTo(map));
+    FACTION_LINES.forEach(f => L.polyline([f.from, f.to], { color: f.color, weight: 1.2, opacity: 0.4, dashArray: f.dash }).addTo(map));
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd', maxZoom: 19,
-    }).addTo(map);
-
-    const tp = map.getPane('tilePane');
-    if (tp) tp.style.filter = 'brightness(0.4) saturate(0.25) sepia(0.5) contrast(1.1)';
-
-    // Routes
-    ROUTES.forEach(r => {
-      L.polyline(r.path, { color: r.color, weight: r.weight, opacity: 0.5, dashArray: r.dash })
-        .addTo(map).bindTooltip(r.label, { permanent: false, direction: 'center', className: '', offset: [0, 0], opacity: 0.8 });
-    });
-
-    // Faction lines
-    FACTION_LINES.forEach(f => {
-      L.polyline([f.from, f.to], { color: f.color, weight: 1.5, opacity: 0.5, dashArray: f.dash })
-        .addTo(map);
-    });
-
-    // Markers
-    const mk = (color: string, size: number) => L.divIcon({
-      className: '',
-      html: `<div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 10px ${color}90;"></div>`,
-      iconSize: [size, size], iconAnchor: [size / 2, size / 2],
-    });
-
-    LOCATIONS.forEach(p => {
-      L.marker([p.lat, p.lng], { icon: mk(p.color, p.size) })
-        .addTo(map)
-        .on('click', () => setSelectedLoc(p));
-    });
+    const mk = (c: string, s: number) => L.divIcon({ className: '', html: `<div style="width:${s}px;height:${s}px;background:${c};border-radius:50%;border:2px solid rgba(255,255,255,0.5);box-shadow:0 0 10px ${c}90;"></div>`, iconSize: [s, s], iconAnchor: [s / 2, s / 2] });
+    LOCATIONS.forEach(p => L.marker([p.lat, p.lng], { icon: mk(p.color, p.size) }).addTo(map).on('click', () => { setSelectedLoc(p); setExpandedChar(null); }));
 
     // Region labels
-    [
-      [34.8, 112.5, '京 畿'], [34.2, 108.5, '关 中'], [35.0, 114.8, '中 原'],
-      [38.5, 112.0, '河 朔'], [38.5, 118.0, '燕 齐'], [37.5, 102.0, '雍 凉'],
-      [31.5, 118.0, '江 淮'], [31.0, 112.0, '荆 襄'], [30.0, 104.0, '巴 蜀'],
-      [42.0, 90.0, '西 域'], [46.0, 108.0, '草 原'], [25.5, 101.0, '苗 疆'], [23.5, 113.0, '岭 南'],
-    ].forEach(([lat, lng, text]) => {
-      L.marker([lat as number, lng as number], {
-        icon: L.divIcon({
-          className: '', html: `<span style="font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;color:#c8a86c;text-shadow:2px 2px 8px rgba(0,0,0,0.95);letter-spacing:4px;white-space:nowrap;">${text}</span>`,
-          iconSize: [120, 20], iconAnchor: [60, 10],
-        }), interactive: false,
-      }).addTo(map);
+    [[34.8,112.5,'京 畿'],[34.2,108.5,'关 中'],[35.0,114.8,'中 原'],[38.5,112.0,'河 朔'],[38.5,118.0,'燕 齐'],[37.5,102.0,'雍 凉'],[31.5,118.0,'江 淮'],[31.0,112.0,'荆 襄'],[30.0,104.0,'巴 蜀'],[42.0,90.0,'西 域'],[46.0,108.0,'草 原'],[25.5,101.0,'苗 疆'],[23.5,113.0,'岭 南']].forEach(([la,lo,t]) => {
+      L.marker([la as number, lo as number], { icon: L.divIcon({ className: '', html: `<span style="font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;color:#c8a86c;text-shadow:2px 2px 8px rgba(0,0,0,0.95);letter-spacing:4px;white-space:nowrap;">${t}</span>`, iconSize: [120, 20], iconAnchor: [60, 10] }), interactive: false }).addTo(map);
     });
-
     // Foreign labels
-    [
-      [52, 100, '北 狄'], [36, 70, '大 食'], [30, 78, '天 竺'],
-      [20, 106, '交 趾'], [15, 115, '南 洋'], [42, 78, '西域诸邦'], [50, 116, '女 真'],
-    ].forEach(([lat, lng, text]) => {
-      L.marker([lat as number, lng as number], {
-        icon: L.divIcon({
-          className: '', html: `<span style="font-family:'Noto Serif SC',serif;font-size:13px;color:#7a6a50;text-shadow:1px 1px 6px rgba(0,0,0,0.9);letter-spacing:4px;">${text}</span>`,
-          iconSize: [130, 20], iconAnchor: [65, 10],
-        }), interactive: false,
-      }).addTo(map);
+    [[52,100,'北 狄'],[36,70,'大 食'],[30,78,'天 竺'],[20,106,'交 趾'],[15,115,'南 洋'],[42,78,'西域诸邦'],[50,116,'女 真']].forEach(([la,lo,t]) => {
+      L.marker([la as number, lo as number], { icon: L.divIcon({ className: '', html: `<span style="font-family:'Noto Serif SC',serif;font-size:13px;color:#7a6a50;text-shadow:1px 1px 6px rgba(0,0,0,0.9);letter-spacing:4px;">${t}</span>`, iconSize: [130, 20], iconAnchor: [65, 10] }), interactive: false }).addTo(map);
     });
 
     L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
-
     setTimeout(() => map.invalidateSize(), 150);
-
     return () => { map.remove(); };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 16 }}
-      onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 12 }} onClick={onClose}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{
-        position: 'relative', width: '96%', maxWidth: 1100, height: '86vh',
-        background: '#1a1a1a', border: '1px solid var(--dz-gray-light)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.8)', display: 'flex',
-        clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)',
-        overflow: 'hidden',
-      }}>
-        {/* Map area */}
+      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '96%', maxWidth: 1100, height: '88vh', background: '#1a1a1a', border: '1px solid var(--dz-gray-light)', boxShadow: '0 8px 40px rgba(0,0,0,0.8)', display: 'flex', clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)', overflow: 'hidden' }}>
+        {/* Map */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(40,30,15,0.95)', borderBottom: '2px solid #8b7355', flexShrink: 0 }}>
             <h2 style={{ fontFamily: "'Noto Serif SC', serif", fontSize: 20, fontWeight: 900, color: '#e8d5a3', letterSpacing: 8, margin: 0 }}>大周堪舆图</h2>
@@ -343,72 +344,72 @@ export function MapModal({ isOpen, onClose, onSend }: Props) {
           <div id="dz-leaflet-map" style={{ flex: 1, background: '#2a2518' }} />
         </div>
 
-        {/* Side panel */}
+        {/* Side Panel */}
         {selectedLoc && (
-          <div style={{
-            width: 320, flexShrink: 0, background: 'rgba(20,16,12,0.97)', borderLeft: '1px solid #6b5b3e',
-            display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 5,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '16px 18px 12px', borderBottom: '1px solid #3a3020' }}>
-              <div>
-                <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 18, fontWeight: 700, color: '#f0e0b0', letterSpacing: 2, marginBottom: 4 }}>{selectedLoc.title}</div>
-                <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 11, color: '#8a7a5a' }}>{selectedLoc.desc.slice(0, 80)}...</div>
-              </div>
+          <div style={{ width: 360, flexShrink: 0, background: 'rgba(18,14,10,0.98)', borderLeft: '1px solid #6b5b3e', display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 5 }}>
+            <div style={{ padding: '16px 18px 12px', borderBottom: '1px solid #3a3020' }}>
+              <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 18, fontWeight: 700, color: '#f0e0b0', letterSpacing: 2, marginBottom: 6 }}>{selectedLoc.title}</div>
+              <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 12, color: '#8a7a5a', lineHeight: 1.7, marginBottom: 10 }}>{selectedLoc.desc}</div>
               <button onClick={() => { onSend(`前往${selectedLoc.name}`); onClose(); }} style={{
-                padding: '6px 14px', flexShrink: 0, marginLeft: 8,
-                background: 'var(--dz-red)', color: '#fff', border: 'none', cursor: 'pointer',
-                fontFamily: "'Noto Serif SC',serif", fontSize: 12, fontWeight: 700,
+                padding: '8px 20px', background: 'var(--dz-red)', color: '#fff', border: 'none', cursor: 'pointer',
+                fontFamily: "'Noto Serif SC',serif", fontSize: 13, fontWeight: 700,
                 clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)',
-              }}>前往</button>
+              }}>前往此地</button>
             </div>
+
             <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px' }}>
               {/* Characters */}
               {selectedLoc.chars.length > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 13, color: '#c8a86c', fontWeight: 700, letterSpacing: 1, marginBottom: 8, borderLeft: '2px solid #c8a86c', paddingLeft: 8 }}>人物</div>
-                  {selectedLoc.chars.map((c, i) => (
-                    <div key={i} style={{
-                      padding: '8px 10px', marginBottom: 4,
-                      background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(107,91,62,0.3)',
-                      clipPath: 'polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)',
-                    }}>
-                      <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 13, color: '#e8c878', fontWeight: 600, marginBottom: 2 }}>{c.name}</div>
-                      <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 10, color: '#9a8a6a', lineHeight: 1.5 }}>{c.info}</div>
-                    </div>
-                  ))}
+                  <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 14, color: '#c8a86c', fontWeight: 700, letterSpacing: 1, marginBottom: 10, borderLeft: '2px solid #c8a86c', paddingLeft: 10 }}>人物 ({selectedLoc.chars.length})</div>
+                  {selectedLoc.chars.map((c, i) => {
+                    const expanded = expandedChar === c.name;
+                    return (
+                      <div key={i} onClick={() => setExpandedChar(expanded ? null : c.name)} style={{
+                        padding: expanded ? '10px 12px' : '8px 12px', marginBottom: expanded ? 8 : 4,
+                        background: expanded ? 'rgba(201,166,92,0.06)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${expanded ? 'rgba(201,166,92,0.3)' : 'rgba(107,91,62,0.3)'}`,
+                        clipPath: 'polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)',
+                        cursor: 'pointer', transition: 'all 0.15s',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <span style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 13, color: '#e8c878', fontWeight: 600 }}>{c.name}</span>
+                            {c.title && <span style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 10, color: '#8a7a5a', marginLeft: 8 }}>{c.title}</span>}
+                          </div>
+                          <span style={{ fontSize: 10, color: '#5a4a30', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
+                        </div>
+                        {expanded && (
+                          <div style={{
+                            marginTop: 8, paddingTop: 8, borderTop: '1px dotted #3a3020',
+                            fontFamily: "'Noto Serif SC',serif", fontSize: 11, color: '#a09070',
+                            lineHeight: 1.8, whiteSpace: 'pre-wrap',
+                          }}>{c.detail}</div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
+
               {/* Faction */}
               {selectedLoc.factionNote && (
                 <div>
-                  <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 13, color: '#c8a86c', fontWeight: 700, letterSpacing: 1, marginBottom: 6, borderLeft: '2px solid #c8a86c', paddingLeft: 8 }}>势力纠葛</div>
-                  <div style={{
-                    padding: '10px 12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(107,91,62,0.3)',
-                    clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)',
-                    fontFamily: "'Noto Serif SC',serif", fontSize: 11, color: '#a09070', lineHeight: 1.7,
-                  }}>{selectedLoc.factionNote}</div>
+                  <div style={{ fontFamily: "'Noto Serif SC',serif", fontSize: 14, color: '#c8a86c', fontWeight: 700, letterSpacing: 1, marginBottom: 8, borderLeft: '2px solid #c8a86c', paddingLeft: 10 }}>势力纠葛</div>
+                  <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(107,91,62,0.3)', clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)', fontFamily: "'Noto Serif SC',serif", fontSize: 12, color: '#a09070', lineHeight: 1.8 }}>{selectedLoc.factionNote}</div>
                 </div>
               )}
             </div>
-            <button onClick={() => setSelectedLoc(null)} style={{
-              padding: '8px', borderTop: '1px solid #3a3020', background: 'none', border: 'none',
-              color: '#8a7a5a', cursor: 'pointer', fontFamily: "'Noto Serif SC',serif", fontSize: 12,
-            }}>收起详情</button>
+
+            <button onClick={() => { setSelectedLoc(null); setExpandedChar(null); }} style={{ padding: '10px', borderTop: '1px solid #3a3020', background: 'none', border: 'none', color: '#8a7a5a', cursor: 'pointer', fontFamily: "'Noto Serif SC',serif", fontSize: 12 }}>收起详情</button>
           </div>
         )}
 
         {/* Legend */}
-        <div style={{
-          position: 'absolute', bottom: 8, left: 8, zIndex: 10,
-          background: 'rgba(40,30,15,0.92)', border: '1px solid #6b5b3e', borderRadius: 4,
-          padding: '6px 10px', fontFamily: "'Noto Serif SC',serif", fontSize: 10, lineHeight: 2, color: '#d4c5a0',
-          maxWidth: 200, pointerEvents: selectedLoc ? 'none' : 'auto',
-        }}>
-          <div style={{ color: '#e8d5a3', fontWeight: 700, marginBottom: 2 }}>图 例</div>
-          {[['#ff4444', '京畿·皇都'], ['#ff8800', '王府·国公府'], ['#44aaff', '州府重镇'], ['#44dd44', '正派·宗门'], ['#ddaa44', '世家族地'], ['#aa66cc', '关隘要塞'], ['#888', '边镇都护府'], ['#cc6666', '邪派·暗势力'], ['#e88', '外邦区域']].map(([c, l]) => (
-            <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: c, border: '1px solid rgba(255,255,255,0.3)', flexShrink: 0 }} />{l}
-            </div>
+        <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 10, background: 'rgba(40,30,15,0.92)', border: '1px solid #6b5b3e', borderRadius: 4, padding: '6px 10px', fontFamily: "'Noto Serif SC',serif", fontSize: 10, lineHeight: 2, color: '#d4c5a0' }}>
+          <div style={{ color: '#e8d5a3', fontWeight: 700 }}>图 例</div>
+          {[['#ff4444','京畿·皇都'],['#ff8800','王府·国公府'],['#44aaff','州府重镇'],['#44dd44','正派·宗门'],['#ddaa44','世家族地'],['#aa66cc','关隘要塞'],['#888','边镇都护府'],['#cc6666','邪派·暗势力'],['#e88','外邦区域']].map(([c,l]) => (
+            <div key={l} style={{ display:'flex',alignItems:'center',gap:6 }}><div style={{ width:8,height:8,borderRadius:'50%',background:c,border:'1px solid rgba(255,255,255,0.3)',flexShrink:0 }} />{l}</div>
           ))}
         </div>
       </div>
