@@ -58,21 +58,19 @@ export function NewGameFlow({ onStart }: Props) {
           const playerDesc = name.trim() || (gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客');
           const displayText = pendingOpening.text.replace(/\{主角\}/g, playerDesc).replace(/\{\{user\}\}/g, playerDesc);
 
-          // Build player info line: name + gender + self-intro
-          let infoLine = `[玩家信息] 姓名：${playerName}，性别：${gender}`;
-          if (desc.trim()) infoLine += `，自我介绍：${desc.trim()}`;
-          infoLine += `。以上是玩家信息，开始游戏吧。`;
-
-          // The full first message: player info + opening scene text
-          const playerMsg = `${infoLine}\n\n${displayText}`;
-
-          // No pre-stored messages — sendMessage will create the user message
-          chat.messages = [];
+          // ---- Layer 0: 开场白作为第一条用户消息（展示在 StoryArea） ----
+          chat.messages = [
+            { id: crypto.randomUUID(), role: 'user', content: displayText, timestamp: Date.now(), variables: {} },
+          ];
           chat.updatedAt = Date.now();
           await saveChat(chat);
-          setChatMessages(cid, []);
+          setChatMessages(cid, chat.messages);
 
-          try { await sendMessage(playerMsg, chat); } catch {}
+          // ---- Layer 1: 玩家信息发送给 AI，触发游戏开始 ----
+          let playerInfo = `[玩家信息] 姓名：${playerName}，性别：${gender}`;
+          if (desc.trim()) playerInfo += `，自我介绍：${desc.trim()}`;
+          playerInfo += `。以上是玩家信息，开始游戏吧。`;
+          try { await sendMessage(playerInfo, chat); } catch {}
         }
       }
       onStart();
