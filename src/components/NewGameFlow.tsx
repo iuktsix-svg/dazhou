@@ -65,12 +65,14 @@ export function NewGameFlow({ onStart }: Props) {
           chat.updatedAt = Date.now();
           await saveChat(chat);
           setChatMessages(cid, chat.messages);
+          console.log('[NewGame] Layer 0 saved, chatId:', cid, 'msg length:', displayText.length);
 
           // ---- Layer 1: 玩家信息发送给 AI，触发游戏开始 ----
           let playerInfo = `[玩家信息] 姓名：${playerName}，性别：${gender}`;
           if (desc.trim()) playerInfo += `，自我介绍：${desc.trim()}`;
           playerInfo += `。以上是玩家信息，开始游戏吧。`;
-          try { await sendMessage(playerInfo, chat); } catch (e) { console.error('sendMessage failed:', e); }
+          console.log('[NewGame] Sending Layer 1:', playerInfo);
+          try { await sendMessage(playerInfo, chat); console.log('[NewGame] sendMessage completed'); } catch (e) { console.error('sendMessage failed:', e); }
         }
       }
       onStart();

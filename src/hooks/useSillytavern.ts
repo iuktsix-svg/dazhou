@@ -222,6 +222,7 @@ export function useSillytavern() {
     let updatedChat = { ...targetChat, messages: updatedMessages, updatedAt: Date.now() };
     await saveChat(updatedChat);
     setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
+    console.log('[sendMessage] User msg saved, chat msgs:', updatedMessages.length, 'content:', content.slice(0, 80));
 
     // ---- Step 2: API call (may fail — user message is already persisted) ----
     try {
@@ -283,6 +284,8 @@ export function useSillytavern() {
         );
         setStreamingText(rawReply);
       }
+
+      console.log('[sendMessage] API reply length:', rawReply.length, 'preview:', rawReply.slice(0, 120));
 
       // Extract variables from reply
       const { cleanedText: reply, updates: extractedVars } = extractVariables(rawReply);
@@ -354,10 +357,12 @@ export function useSillytavern() {
       };
       await saveChat(updatedChat);
       setChats(prev => prev.map(c => c.id === updatedChat.id ? updatedChat : c));
+      console.log('[sendMessage] Assistant saved, total msgs:', updatedChat.messages.length);
       setStreamingText('');
       setStreamingBlocks([]);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      console.error('[sendMessage] API error:', msg);
       if (msg.includes('AbortError') || msg.includes('aborted')) {
         // User cancelled — not an error
       } else if (msg.includes('API error') || msg.includes('fetch')) {
