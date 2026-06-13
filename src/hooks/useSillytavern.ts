@@ -58,7 +58,7 @@ export function useSillytavern() {
     if (!s) {
       const defaultSettings: AppSettings = {
         id: 'app-settings',
-        api: { primary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, secondary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, memory: { enabled: false, baseUrl: '', apiKey: '', model: '' } },
+        api: { primary: { enabled: true, baseUrl: 'https://gcli.ggchan.dev', apiKey: 'gg-gcli-2cVY_nJDhtTeDRlkU1xpNVe0wWtVBCHbwXratlYJ2xU', model: 'gemini-3.1-pro-preview' }, secondary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, memory: { enabled: false, baseUrl: '', apiKey: '', model: '' } },
         userName: '侠客', characterName: '主角', activeLorebookIds: [], activePresetId: null, uiMode: 'game', customTags: [], stripTags: [],
         createdAt: Date.now(), updatedAt: Date.now(),
       };
