@@ -46,7 +46,9 @@ export function NewGameFlow({ onStart }: Props) {
 
   useEffect(() => {
     if (!pendingOpening) return;
+    let cancelled = false;
     (async () => {
+      if (cancelled) return;
       const playerName = name.trim() || (gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客');
       const cid = await createChat(`${playerName} - 江湖之旅`).catch(() => null);
       if (cid) {
@@ -75,8 +77,9 @@ export function NewGameFlow({ onStart }: Props) {
           try { await sendMessage(playerInfo, chat); console.log('[NewGame] sendMessage completed'); } catch (e) { console.error('sendMessage failed:', e); }
         }
       }
-      onStart();
+      if (!cancelled) onStart();
     })();
+    return () => { cancelled = true; };
   }, [pendingOpening]);
 
   if (isLoading) return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--wx-paper)', fontFamily: 'var(--font-title)', fontSize: 'var(--text-xl)', color: 'var(--wx-vermillion)' }}>加载中…</div>;
