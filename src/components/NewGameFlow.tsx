@@ -150,6 +150,7 @@ export function NewGameFlow({ onStart }: Props) {
             <motion.button key={o.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} whileHover={{ y: -3, boxShadow: 'var(--sh-gold)' }} whileTap={{ scale: 0.98 }}
               onClick={() => {
                 const openingText = OPENING_TEXTS[o.id] || `第一回 ${o.title}\n\n${o.desc}`;
+                console.log('[NewGame] Clicked opening:', o.id, o.title, 'text length:', openingText.length);
                 setPreviewOpening({ text: openingText, id: o.id, title: o.title, label: o.label });
               }}
               style={{ padding: '18px 16px', cursor: 'pointer', textAlign: 'left', background: 'var(--wx-card)', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', boxShadow: 'var(--sh-sm)', transition: 'all 0.2s', fontFamily: 'inherit' }}>
@@ -184,7 +185,7 @@ export function NewGameFlow({ onStart }: Props) {
             {/* Footer — actions */}
             <div style={{ padding: '16px 24px 20px', borderTop: '1px solid var(--bdr-subtle)', display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
               <button onClick={() => setPreviewOpening(null)} style={{ padding: '10px 28px', background: 'var(--wx-card)', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)' }}>再想想</button>
-              <button onClick={() => { setPendingOpening({ text: previewOpening.text, id: previewOpening.id }); setPreviewOpening(null); }}
+              <button onClick={() => { console.log('[NewGame] Confirmed opening:', previewOpening.id, previewOpening.title); setPendingOpening({ text: previewOpening.text, id: previewOpening.id }); setPreviewOpening(null); }}
                 style={{ padding: '10px 32px', background: 'var(--wx-vermillion)', color: '#fff', border: 'none', borderRadius: 'var(--rd-md)', cursor: 'pointer', fontFamily: 'var(--font-title)', fontSize: 'var(--text-base)', letterSpacing: 2 }}>选择此开局</button>
             </div>
           </div>
