@@ -82,6 +82,7 @@ export function NewGameFlow({ onStart }: Props) {
           try { await sendMessage(playerInfo, chat); console.log('[NewGame] sendMessage completed'); } catch (e) { console.error('sendMessage failed:', e); }
         }
       }
+      console.log('[NewGame] calling onStart, cancelled:', cancelled);
       if (!cancelled) onStart();
     })();
     return () => { cancelled = true; };
