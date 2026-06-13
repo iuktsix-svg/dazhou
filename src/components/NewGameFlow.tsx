@@ -53,20 +53,21 @@ export function NewGameFlow({ onStart }: Props) {
         const { getChat, saveChat } = await import('../sillytavern/database');
         const chat = await getChat(cid);
         if (chat) {
-          // Display text: replace {主角} and {{user}} with player desc
+          // Replace {主角} and {{user}} with player description in the opening text
           const playerDesc = name.trim() || (gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客');
           const displayText = pendingOpening.text.replace(/\{主角\}/g, playerDesc).replace(/\{\{user\}\}/g, playerDesc);
-          // Construct the first user message: player info (hidden) + opening story (visible)
-          // The opening story IS the user's first "message" to the AI.
-          const playerInfo = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}`;
-          // Let sendMessage create the user message — don't pre-add it
-          chat.messages = [];
+
+          // Store the opening scene as a system message (archival, not displayed)
+          chat.messages = [
+            { id: crypto.randomUUID(), role: 'system', content: displayText, timestamp: Date.now(), variables: {} },
+          ];
           chat.updatedAt = Date.now();
           await saveChat(chat);
-          setChatMessages(cid, []);
-          // Trigger AI with the full chat object (avoids stale closure on activeChat)
-          // Must await so the user message is saved to state before onStart() transitions
-          try { await sendMessage(`${playerInfo}\n\n<开场背景>\n${displayText}\n</开场背景>`, chat); } catch {}
+          setChatMessages(cid, chat.messages);
+
+          // The visible user message — auto-sent to the AI to start the game
+          const playerMsg = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}以上是玩家信息，开始游戏吧。`;
+          try { await sendMessage(playerMsg, chat); } catch {}
         }
       }
       onStart();
