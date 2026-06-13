@@ -53,21 +53,25 @@ export function NewGameFlow({ onStart }: Props) {
         const { getChat, saveChat } = await import('../sillytavern/database');
         const chat = await getChat(cid);
         if (chat) {
-          // Replace {主角} and {{user}} with player description in the opening text
+          // Replace {主角} and {{user}} with player name/desc in the opening text
+          const playerName = name.trim() || (gender === '男' ? '少侠' : gender === '女' ? '女侠' : '侠客');
           const playerDesc = name.trim() || (gender === '男' ? '一位初入江湖的少侠' : gender === '女' ? '一位初入江湖的女侠' : '一位初入江湖的侠客');
           const displayText = pendingOpening.text.replace(/\{主角\}/g, playerDesc).replace(/\{\{user\}\}/g, playerDesc);
 
-          // Store the opening scene as a system message (archival, not displayed)
-          chat.messages = [
-            { id: crypto.randomUUID(), role: 'system', content: displayText, timestamp: Date.now(), variables: {} },
-          ];
+          // Build player info line: name + gender + self-intro
+          let infoLine = `[玩家信息] 姓名：${playerName}，性别：${gender}`;
+          if (desc.trim()) infoLine += `，自我介绍：${desc.trim()}`;
+          infoLine += `。以上是玩家信息，开始游戏吧。`;
+
+          // The full first message: player info + opening scene text
+          const playerMsg = `${infoLine}\n\n${displayText}`;
+
+          // No pre-stored messages — sendMessage will create the user message
+          chat.messages = [];
           chat.updatedAt = Date.now();
           await saveChat(chat);
-          setChatMessages(cid, chat.messages);
+          setChatMessages(cid, []);
 
-          // The visible message sent to the chat — single line to avoid
-          // StoryArea's NPC-dialogue regex (^(.{1,6})：(.+)) from mangling the text
-          const playerMsg = `[玩家信息] 性别：${gender}，${desc ? `自我介绍：${desc}，` : ''}以上是玩家信息，开始游戏吧。`;
           try { await sendMessage(playerMsg, chat); } catch {}
         }
       }
