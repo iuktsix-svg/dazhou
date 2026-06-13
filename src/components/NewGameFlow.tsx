@@ -70,7 +70,7 @@ export function NewGameFlow({ onStart }: Props) {
           let playerInfo = `[玩家信息] 姓名：${playerName}，性别：${gender}`;
           if (desc.trim()) playerInfo += `，自我介绍：${desc.trim()}`;
           playerInfo += `。以上是玩家信息，开始游戏吧。`;
-          try { await sendMessage(playerInfo, chat); } catch {}
+          try { await sendMessage(playerInfo, chat); } catch (e) { console.error('sendMessage failed:', e); }
         }
       }
       onStart();
