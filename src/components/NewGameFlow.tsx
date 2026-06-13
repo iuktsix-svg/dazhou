@@ -65,8 +65,9 @@ export function NewGameFlow({ onStart }: Props) {
           await saveChat(chat);
           setChatMessages(cid, chat.messages);
 
-          // The visible user message — auto-sent to the AI to start the game
-          const playerMsg = `[玩家信息] 性别：${gender}。${desc ? `自我介绍：${desc}` : ''}以上是玩家信息，开始游戏吧。`;
+          // The visible message sent to the chat — single line to avoid
+          // StoryArea's NPC-dialogue regex (^(.{1,6})：(.+)) from mangling the text
+          const playerMsg = `[玩家信息] 性别：${gender}，${desc ? `自我介绍：${desc}，` : ''}以上是玩家信息，开始游戏吧。`;
           try { await sendMessage(playerMsg, chat); } catch {}
         }
       }
