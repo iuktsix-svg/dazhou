@@ -65,7 +65,8 @@ export function NewGameFlow({ onStart }: Props) {
           await saveChat(chat);
           setChatMessages(cid, []);
           // Trigger AI with the full chat object (avoids stale closure on activeChat)
-          try { sendMessage(`${playerInfo}\n\n<开场背景>\n${displayText}\n</开场背景>`, chat); } catch {}
+          // Must await so the user message is saved to state before onStart() transitions
+          try { await sendMessage(`${playerInfo}\n\n<开场背景>\n${displayText}\n</开场背景>`, chat); } catch {}
         }
       }
       onStart();
