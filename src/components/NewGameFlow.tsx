@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSillytavern } from '../hooks/useSillytavern';
 import { OPENING_TEXTS } from '../data/openings';
@@ -45,13 +45,8 @@ export function NewGameFlow({ onStart }: Props) {
     return () => clearTimeout(t);
   }, [step, introLine]);
 
-  const startedRef = useRef(false);
-  // Reset guard on unmount so re-entering NewGameFlow works
-  useEffect(() => () => { startedRef.current = false; }, []);
-
   useEffect(() => {
-    if (!pendingOpening || startedRef.current) return;
-    startedRef.current = true;
+    if (!pendingOpening) return;
     let cancelled = false;
     (async () => {
       if (cancelled) return;
