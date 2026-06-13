@@ -27,9 +27,9 @@ export function StoryArea({ messages, streamingText, isStreaming, onOption }: Pr
   const stripTags = settings?.stripTags || ['thinking', 'think', 'sum', 'vars'];
 
   const lastAssistant = [...messages].reverse().find(m => m.role === ASSISTANT_ROLE);
-  // Show last non-system message (user or assistant)
-  const lastDisplay = [...messages].reverse().find(m => m.role !== 'system');
-  const rawText = (isStreaming && streamingText) ? streamingText : (lastAssistant?.content || lastDisplay?.content || '');
+  // When no AI reply yet, show the FIRST user message (opening scene) — not the last (trigger)
+  const firstDisplay = messages.find(m => m.role !== 'system');
+  const rawText = (isStreaming && streamingText) ? streamingText : (lastAssistant?.content || firstDisplay?.content || '');
 
   let cleanText = rawText
     .replace(/<maintext>/gi, '').replace(/<\/maintext>/gi, '')
