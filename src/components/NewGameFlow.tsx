@@ -196,6 +196,5 @@ export function NewGameFlow({ onStart }: Props) {
         </div>
       )}
     </div>
-    </div>
   );
 }
