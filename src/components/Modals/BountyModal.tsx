@@ -1,118 +1,91 @@
 import { useEffect, useState } from 'react';
-import { useSillytavern } from '../../hooks/useSillytavern';
-import { Crosshair, MapPin } from 'lucide-react';
+import { getChats } from '../../sillytavern/database';
+import { Crosshair, MapPin, ChevronDown } from 'lucide-react';
 
 interface Props { isOpen: boolean; onClose: () => void; onSend: (text: string) => void; }
-interface BountyEntry { 排名或赏金?: string; 上榜理由与罪状?: string; 最后出没地点?: string; rank?: string; reason?: string; location?: string; }
+interface BountyEntry { 排名或赏金?: string; 上榜理由与罪状?: string; 最后出没地点?: string; 赏金?: number; 姓名?: string; 身份?: string; 罪状?: string; 最后出没?: string; 评语?: string; }
 
 export function BountyModal({ isOpen, onClose, onSend }: Props) {
-  const { activeChat } = useSillytavern();
-  const [bounties, setBounties] = useState<Record<string, BountyEntry>>({});
+  const [bounties, setBounties] = useState<BountyEntry[]>([]);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isOpen) return;
-    const boards = ((activeChat?.variables || {}) as Record<string, unknown>)['武林榜单与悬赏'] as Record<string, Record<string, BountyEntry>> || {};
-    // Extract only the 悬赏榜 / bounty entries
-    const raw = boards['追杀悬赏榜'] || boards['悬赏榜'] || boards['追杀榜'] || {};
-    setBounties(raw);
-  }, [isOpen, activeChat]);
+    getChats().then(chats => { 
+      const vars = (chats[0]?.variables || {}) as Record<string, unknown>;
+      let raw: BountyEntry[] = [];
+      // Flat key
+      const bountyKey = Object.keys(vars).find(k => (k.includes('悬赏榜') || k === '武林榜单与悬赏.悬赏榜' || (k.includes('悬赏') && !k.includes('定海') && !k.includes('太阿') && !k.includes('惊蛰') && !k.includes('群芳') && !k.includes('名锋')))); console.log('[BountyModal] key:', bountyKey, '| arrLen:', ((bountyKey ? vars[bountyKey] : undefined) as any)?.length); const arr = bountyKey ? (vars[bountyKey] as BountyEntry[]) : undefined;
+      if (arr && Array.isArray(arr)) raw = arr;
+      // Nested
+      if (raw.length === 0) {
+        const nested = vars['武林榜单与悬赏'] as Record<string, BountyEntry[]> | undefined;
+        if (nested) raw = nested['悬赏榜'] || nested['追杀榜'] || [];
+      }
+      setBounties(raw);
+    });
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const entries = Object.entries(bounties);
+  const toggle = (name: string) => {
+    const next = new Set(expanded);
+    next.has(name) ? next.delete(name) : next.add(name);
+    setExpanded(next);
+  };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }} onClick={onClose}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} />
-      <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: 540, maxHeight: '84vh', background: 'var(--dz-dark)', border: '1px solid var(--dz-gray-light)', boxShadow: '0 8px 40px rgba(0,0,0,0.8)', clipPath: 'polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(197,48,48,0.08) 1px, transparent 1px)', backgroundSize: '8px 8px', pointerEvents: 'none', zIndex: 0 }} />
-
-        {/* Header */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--dz-gray-light)', background: 'rgba(197,48,48,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ width: 4, height: 22, background: 'var(--dz-red)', clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)' }} />
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 700, color: 'var(--dz-white)', letterSpacing: 3, margin: 0 }}>悬赏令</h2>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: 2, background: 'none', border: 'none', color: 'var(--dz-text)', cursor: 'pointer', fontSize: 20 }}>×</button>
+    <div className="dz-modal-shell" onClick={onClose}>
+      <div className="cm-box" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+        <div className="cm-head">
+          <Crosshair size={18} style={{ color: 'var(--wx-vermillion)' }} />
+          <span>悬赏令</span>
+          {bounties.length > 0 && <span className="cm-count">{bounties.length}份</span>}
+          <button className="cm-close" onClick={onClose}>×</button>
         </div>
 
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 1, flex: 1, overflow: 'auto', padding: '16px 20px' }}>
-          {entries.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 50 }}>
-              <Crosshair size={36} style={{ color: 'var(--dz-text-dim)', opacity: 0.3, marginBottom: 12 }} />
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: '#c8a86c', fontWeight: 700, marginBottom: 8 }}>暂无悬赏</div>
-              <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#8a7a5a', lineHeight: 1.7 }}>
-                在江湖中打听消息或揭下告示<br />悬赏目标将汇集于此
-              </div>
-            </div>
+        <div className="cm-body">
+          {bounties.length === 0 ? (
+            <div className="cm-empty">暂无悬赏令</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {entries.map(([name, info], i) => {
-                const bounty = info['排名或赏金'] || info.rank || '--';
-                const crime = info['上榜理由与罪状'] || info.reason || '';
-                const loc = info['最后出没地点'] || info.location || '';
+            bounties.map((b, i) => {
+              const name = b['姓名'] || '';
+              const bounty = b['赏金'] || 0;
+              const crime = b['罪状'] || b['上榜理由与罪状'] || '';
+              const loc = b['最后出没'] || b['最后出没地点'] || '';
+              const comment = b['评语'] || '';
+              const isOpen = expanded.has(name);
 
-                return (
-                  <div key={name} style={{
-                    padding: '16px 18px',
-                    background: `rgba(197,48,48,${0.04 + i * 0.01})`,
-                    border: '1px solid rgba(197,48,48,0.2)',
-                    borderLeft: '4px solid var(--dz-red)',
-                    clipPath: 'polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%)',
-                    boxShadow: i === 0 ? '0 0 20px rgba(197,48,48,0.08)' : undefined,
-                  }}>
-                    {/* Name + Bounty */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <Crosshair size={18} style={{ color: 'var(--dz-red)' }} />
-                        <span style={{ fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 700, color: 'var(--dz-white)', letterSpacing: 1 }}>{name}</span>
-                      </div>
-                      <div style={{
-                        padding: '4px 14px', background: 'rgba(197,48,48,0.15)', border: '1px solid rgba(197,48,48,0.3)',
-                        clipPath: 'polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%)',
-                        fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 700, color: '#f0a030',
-                      }}>
-                        {bounty}
-                      </div>
+              return (
+                <div key={`${name}-${i}`} className={`lb-card ${isOpen ? 'open' : ''}`} onClick={() => toggle(name)}>
+                  <div className="lb-rank" style={{ color: 'var(--wx-vermillion)' }}>
+                    {bounty.toLocaleString()}两
+                  </div>
+                  <div className="lb-body">
+                    <div className="lb-name-row">
+                      <span className="lb-name">{name}</span>
+                      {b['身份'] && <span className="lb-identity">{b['身份']}</span>}
                     </div>
-
-                    {/* Crime */}
-                    {crime && (
-                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 13, color: 'var(--dz-text)', lineHeight: 1.7, marginBottom: 10, paddingLeft: 4 }}>
-                        {crime}
+                    <div className="lb-reason">{crime}</div>
+                    {loc && <div className="lb-location"><MapPin size={11} />{loc}</div>}
+                    {comment && isOpen && (
+                      <div className="lb-comment">
+                        <div className="lb-comment-label">大理寺按</div>
+                        <div className="lb-comment-text">{comment}</div>
                       </div>
                     )}
-
-                    {/* Location + Track */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      {loc && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--dz-text-dim)' }}>
-                          <MapPin size={12} style={{ color: 'var(--dz-red)' }} />
-                          {loc}
-                        </div>
-                      )}
-                      <button onClick={() => { onSend(`前往追踪悬赏目标「${name}」，${loc ? `最后出没于${loc}。` : '搜寻其下落。'}`); onClose(); }} style={{
-                        padding: '8px 20px', background: 'var(--dz-red)', color: '#fff', border: 'none', cursor: 'pointer',
-                        fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, letterSpacing: 1,
-                        clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)',
-                        boxShadow: '4px 4px 0px rgba(197,48,48,0.3)',
-                        transition: 'all 0.15s',
-                      }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--dz-red-light)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'var(--dz-red)'}
-                      >
-                        前往追踪
-                      </button>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
+                  <button className="cm-track-btn" onClick={e => { e.stopPropagation(); onSend(`前往追踪悬赏目标「${name}」，${loc ? `最后出没于${loc}。` : '搜寻其下落。'}`); onClose(); }}>
+                    追踪
+                  </button>
+                  {comment && (
+                    <div className={`lb-expand ${isOpen ? 'open' : ''}`}><ChevronDown size={14} /></div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
-
-        <div style={{ position: 'relative', zIndex: 1, height: 3, flexShrink: 0, background: 'linear-gradient(90deg, var(--dz-red), #8b0000, var(--dz-red))' }} />
       </div>
     </div>
   );

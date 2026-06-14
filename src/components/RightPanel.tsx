@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ChatSession } from '../sillytavern';
-import { useSillytavern } from '../hooks/useSillytavern';
 import { Swords, ScrollText, Heart, Sparkles, Star, Skull, Backpack, Warehouse, User } from 'lucide-react';
 
 const REALMS = ['凡骨', '淬体', '冲脉', '通明', '入微', '绝顶', '宗师', '天人'];
@@ -18,7 +17,6 @@ interface Props {
 }
 
 export function RightPanel({ chat, openDrawer, onOpenDrawer, onOpenBag, onOpenStorage }: Props) {
-  const { sendMessage } = useSillytavern();
   const [state, setState] = useState({
     realm: '凡骨', realmIdx: 0, hp: 0, hpMax: 100, mp: 0, mpMax: 100,
     exp: 0, expMax: 100, demon: 0, demonMax: 100, condition: '健康', alignment: '中立',
@@ -38,7 +36,7 @@ export function RightPanel({ chat, openDrawer, onOpenDrawer, onOpenBag, onOpenSt
       const martial: Record<string, { name?: string; desc?: string }> = {};
       for (const [name, info] of Object.entries(rawM)) {
         let slot = '外功';
-        if (name.includes('诀') || name.includes('功') || name.includes('经')) slot = '内功';
+        if (name.includes('法') || name.includes('诀') || name.includes('功') || name.includes('经')) slot = '内功';
         else if (name.includes('步') || name.includes('渡')) slot = '轻功';
         else if (name.includes('篇') || name.includes('录')) slot = '秘术';
         if (!martial[slot]?.name) martial[slot] = { name, desc: info['武学描述'] || '' };
@@ -195,17 +193,15 @@ export function RightPanel({ chat, openDrawer, onOpenDrawer, onOpenBag, onOpenSt
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontFamily: 'var(--font-serif)', fontSize: 15, color: skill?.name ? 'var(--dz-gold)' : 'var(--dz-text-dim)', fontWeight: skill?.name ? 600 : 400 }}>{skill?.name || '未习得'}</span>
-                    {skill?.name && (
-                      <button onClick={() => { sendMessage(`强行学习新的${mt.label}，替换当前武学【${skill.name}】。`); closeDrawer(); }}
-                        style={{ padding: '4px 10px', background: 'none', border: '1px solid rgba(192,38,211,0.3)', cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: 11, color: '#c026d3', clipPath: 'polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%)' }}>强行替换 +心魔</button>
-                    )}
                   </div>
                 </div>
               );
             })}
-            <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(192,38,211,0.04)', border: '1px solid rgba(192,38,211,0.15)', clipPath: 'polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%)', fontFamily: 'var(--font-sans)', fontSize: 12, color: '#c026d3', lineHeight: 1.6 }}>
-              每种功法仅可修习一种。强行替换将大幅增加心魔值，心魔满则走火入魔。
-            </div>
+            {Object.values(state.martial).some(s => s?.name) && (
+              <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(192,38,211,0.04)', border: '1px solid rgba(192,38,211,0.15)', borderRadius: 'var(--rd-sm)', fontFamily: 'var(--font-sans)', fontSize: 12, color: '#c026d3', lineHeight: 1.6 }}>
+                初学乍练，来去随心。待到绝学在身，弃之如割肉；若背弃师门不传之秘，轻则心魔缠身，重则走火入魔。
+              </div>
+            )}
           </Drawer>
         )}
       </AnimatePresence>

@@ -27,6 +27,7 @@ export type {
   SillyTavernWorldInfo,
   SillyTavernEntry,
   EntryPosition,
+  MemoryEntry,
 } from './types';
 
 export {
@@ -108,7 +109,6 @@ export {
 
 // API router
 export {
-  decideRoute,
   resolveApiConfig,
 } from './api-router';
 
@@ -125,3 +125,15 @@ export {
   slugify,
   truncate,
 } from './editor-utils';
+
+// Memory manager (AI3)
+export {
+  addMemory,
+  getMemoriesByChat,
+  retrieveMemories,
+  deleteMemoriesByChat,
+  getMemoryCount,
+  mergeMemories,
+  buildMemoryStoragePrompt,
+  buildMemoryContextBlock,
+} from './memory-manager';

@@ -45,6 +45,8 @@ export interface ChatPreset {
   assistantPrompt?: string;    // template prefix for assistant
   // Block ordering
   prompt_order: PromptOrderItem[];
+  // Imported SillyTavern prompt entries
+  _importedPrompts?: { name: string; identifier: string; role: string; content: string; enabled: boolean; injection_position: number; }[];
   createdAt: number;
   updatedAt: number;
 }
@@ -80,6 +82,8 @@ export interface PromptOrderItem {
 // ---- App Settings ----
 
 export interface ApiEndpoint {
+  id: string;
+  name: string;
   enabled: boolean;
   baseUrl: string;
   apiKey: string;
@@ -87,9 +91,11 @@ export interface ApiEndpoint {
 }
 
 export interface ApiConfig {
-  primary: ApiEndpoint;    // 正文生成
-  secondary: ApiEndpoint;  // 变量更新 (JSON Patch)
-  memory: ApiEndpoint;     // 记忆总结 (长对话压缩)
+  saved: ApiEndpoint[];                     // 接口库
+  mainRouteId: string | null;              // 正文路由 → saved endpoint ID
+  varRouteId: string | null;               // 变量路由
+  memRouteId: string | null;               // 记忆路由
+  embedRouteId: string | null;             // 嵌入路由
 }
 
 export interface AppSettings {
@@ -103,6 +109,12 @@ export interface AppSettings {
   customTags: string[];         // e.g. ['maintext', 'option', 'sum', 'vars', 'thinking', 'think']
   stripTags: string[];          // tags to strip from body display
   gameSettings?: GameSettings;
+  // Feature toggles & prompts
+  varEnabled?: boolean;         // enable AI2 variable processing
+  varPrompt?: string;           // AI2 system prompt (customizable)
+  memEnabled?: boolean;         // enable AI3 memory processing
+  memPrompt?: string;           // AI3 memory retrieval prompt (customizable)
+  embedModel?: string;          // model for embeddings (reuses memRouteId's API)
   createdAt: number;
   updatedAt: number;
 }
@@ -198,6 +210,18 @@ export interface ParsedBlock {
 export interface RouteDecision {
   api: 'primary' | 'secondary' | 'memory';
   reason: string;
+}
+
+// ---- Memory System (AI3) ----
+
+export interface MemoryEntry {
+  id: string;
+  chatId: string;
+  keywords: string[];
+  summary: string;
+  timestamp: number;
+  importance: number;          // 0-10
+  embedding?: number[];        // optional vector for semantic search
 }
 
 // ---- Import / Export ----

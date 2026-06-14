@@ -10,14 +10,14 @@ import type { VariableExtraction, VariableBlock } from './types';
  */
 export function extractVariables(rawText: string): VariableExtraction {
   const blocks: VariableBlock[] = [];
-  const varRegex = /<var\s+name\s*=\s*"([^"]*)"\s+value\s*=\s*"([^"]*)"\s*\/>/gi;
+  const varRegex = /<var\s+name\s*=\s*(?:"([^"]*)"|'([^']*)')\s+value\s*=\s*(?:"([\s\S]*?)"|'([\s\S]*?)')\s*\/>/gi;
 
   let cleanedText = rawText;
   let match: RegExpExecArray | null;
 
   while ((match = varRegex.exec(rawText)) !== null) {
-    const name = match[1].trim();
-    const value = match[2];
+    const name = (match[1] || match[2]).trim();
+    const value = match[3] || match[4];
 
     blocks.push({
       name,

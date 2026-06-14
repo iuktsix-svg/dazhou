@@ -1,0 +1,10 @@
+{
+  "name": "大周日暮录",
+  "short_name": "日暮录",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09080a",
+  "theme_color": "#09080a",
+  "orientation": "portrait",
+  "icons": []
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useSillytavern } from '../../hooks/useSillytavern';
+import { getChats, saveChat } from '../../sillytavern/database';
+import type { ChatSession } from '../../sillytavern';
 import { Package } from 'lucide-react';
 
 interface Props { isOpen: boolean; onClose: () => void; onSend: (t: string) => void; }
@@ -15,11 +16,36 @@ const TYPE_META: Record<string, { char: string; bg: string; border: string; text
   '杂物': { char: '杂', bg: '#5A5A5A10', border: '#5A5A5A40', text: '#5A5A5A' },
 };
 
-export function StorageModal({ isOpen, onClose, onSend }: Props) {
-  const { activeChat } = useSillytavern();
+async function doStorageOp(action: string, itemName: string, setItems: (v: Record<string, ItemData>) => void) {
+  const chats = await getChats();
+  const chat = chats[0] as ChatSession | undefined;
+  if (!chat) return;
+  const vars = (chat.variables || {}) as unknown as Record<string, Record<string, unknown>>;
+  const bag = (vars['随身行囊'] || {}) as Record<string, ItemData>;
+  const wh = (vars['仓库'] || {}) as Record<string, ItemData>;
+  const item = wh[itemName];
+  if (!item) return;
+
+  const qty = item['数量'] || item.quantity || 1;
+  if (action === 'retrieve') {
+    if (bag[itemName]) bag[itemName]['数量'] = (bag[itemName]['数量'] || 0) + qty;
+    else bag[itemName] = { ...item, '数量': qty };
+    delete wh[itemName];
+  } else {
+    delete wh[itemName];
+  }
+
+  const actionText = action === 'retrieve' ? `从仓库取出「${itemName}」×${qty} 放回背囊` : `丢弃了仓库中的「${itemName}」×${qty}`;
+  const sysMsg = { id: crypto.randomUUID(), role: 'system' as const, content: `[系统] ${actionText}。`, timestamp: Date.now(), variables: {} };
+  const updated = { ...chat, variables: vars as unknown as Record<string, string|number>, messages: [...chat.messages, sysMsg], updatedAt: Date.now() };
+  await saveChat(updated);
+  setItems(action === 'retrieve' ? { ...wh } : {});
+}
+
+export function StorageModal({ isOpen, onClose, onSend: _onSend }: Props) {
   const [items, setItems] = useState<Record<string, ItemData>>({});
   const [sel, setSel] = useState<string | null>(null);
-  useEffect(() => { if (!isOpen) return; setItems(((activeChat?.variables || {}) as Record<string, unknown>)['仓库'] as Record<string, ItemData> || {}); }, [isOpen, activeChat]);
+  useEffect(() => { if (!isOpen) return; getChats().then(chats => { setItems(((chats[0]?.variables || {}) as Record<string, unknown>)['仓库'] as Record<string, ItemData> || {}); }); }, [isOpen]);
   if (!isOpen) return null;
   const keys = Object.keys(items);
   const item = sel ? items[sel] : null;
@@ -72,8 +98,8 @@ export function StorageModal({ isOpen, onClose, onSend }: Props) {
               <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', lineHeight: 1.5 }}>{item['物品描述'] || item.description || '暂无描述'}</div>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button className="wx-btn wx-btn-outline" style={{ padding: '5px 12px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`丢弃仓库中的【${sel}】。`); onClose(); }}>丢弃</button>
-              <button className="wx-btn wx-btn-red" style={{ padding: '5px 14px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`从仓库中取出【${sel}】放回背囊。`); onClose(); }}>取回背囊</button>
+              <button className="wx-btn wx-btn-outline" style={{ padding: '5px 12px', fontSize: 'var(--text-xs)' }} onClick={() => { doStorageOp('discard', sel!, setItems); onClose(); }}>丢弃</button>
+              <button className="wx-btn wx-btn-red" style={{ padding: '5px 14px', fontSize: 'var(--text-xs)' }} onClick={() => { doStorageOp('retrieve', sel!, setItems); onClose(); }}>取回背囊</button>
             </div>
           </div>
         )}

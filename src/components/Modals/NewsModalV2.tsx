@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useSillytavern } from '../../hooks/useSillytavern';
+import { getChats } from '../../sillytavern/database';
 
 interface Props { isOpen: boolean; onClose: () => void; }
 interface NewsItem { 情报来源?: string; 情报内容?: string; }
 
 export function NewsModal({ isOpen, onClose }: Props) {
-  const { activeChat } = useSillytavern();
   const [news, setNews] = useState<Record<string, NewsItem>>({});
-  useEffect(() => { if (!isOpen) return; setNews(((activeChat?.variables || {}) as Record<string, unknown>)['江湖风媒情报'] as Record<string, NewsItem> || {}); }, [isOpen, activeChat]);
+  useEffect(() => { if (!isOpen) return; getChats().then(chats => { setNews(((chats[0]?.variables || {}) as Record<string, unknown>)['江湖风媒情报'] as Record<string, NewsItem> || {}); }); }, [isOpen]);
   if (!isOpen) return null;
   const e = Object.entries(news);
 

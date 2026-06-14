@@ -1,10 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Crosshair } from 'lucide-react';
 
 interface Props { isOpen: boolean; onClose: () => void; onSend: (text: string) => void; }
 
 interface CharInfo { name: string; title?: string; detail: string; }
+
+const LOCATION_DESC: Record<string, string> = {
+  '河朔 · 飞狐径外野酒肆': '飞狐径，河朔入草原的咽喉要道。此间野酒肆连块正经招牌也无，往来皆是刀头舐血的江湖客与躲避官差的亡命徒。酒是劣酒，肉是粗肉，但胜在热乎——在这朔风如刀的荒郊野岭，一口热酒便是天大的恩赐。',
+  '关中 · 长安西市': '长安西市，丝路东端最大的坊市。胡姬当垆、波斯商贾、吐蕃刀客、东瀛浪人——天下奇人异士，皆聚于此。华山试剑大会前夕，更是人声鼎沸。百晓生曰：若不曾在西市迷过路，便不算到过关中。',
+  '燕齐 · 滹沱河中渡桥': '滹沱河，燕齐之地第一大河。中渡桥乃二百六十六年前的古战场，桥头青石碑下至今香火不绝。琅琊王氏冬至祭海在即，过桥的商队比河里的鱼还多。百晓生曰：桥是好桥，就是风大，冷得很。',
+  '京畿 · 洛阳白马寺': '白马寺，中原佛门第一胜地。惊蛰前夕香火之盛，连正门的门槛都被香客踩矮了三寸。侧门虽僻静，却另有一番玄机——此地离皇城不过十里，寺中藏着多少不愿被世人认出的贵人，天知地知，百晓生也知。',
+  '荆襄 · 洞庭湖畔': '洞庭湖，八百里烟波浩渺。端午赛龙舟、丐帮君山大会——这一天的洞庭湖，水面上漂着的不是船，是人山人海。只是五月的日头毒辣，江风里还夹着死鱼的腥气。百晓生曰：热闹归热闹，记得带防蚊药。',
+  '江淮 · 金陵秦淮河畔': '金陵秦淮，江南销金窟。画舫连缀十里，红灯映水如昼。文人墨客在此一掷千金，江湖豪客在此醉生梦死。百晓生曰：秦淮河的水，一半是酒，一半是泪，还有一半是银子。别问为什么三个一半，问就是你不懂金陵。',
+  '岭南 · 广州番坊': '广州番坊，南洋门户。万国商船在此停泊，胡椒、象牙、琉璃、香料——天下奇珍，皆从此入。上元夜的番坊更是热闹得不像话，万国商会与岭南冼氏沿街散发彩头。百晓生曰：此地湿热难耐，但白吃白拿的好事，一年也就这一回。',
+  '关中 · 华山脚下野酒肆': '华山脚下这处野酒肆，歪歪斜斜勉强算个落脚处。老板娘酿的竹叶青不算好，但切熟牛肉的刀工一绝。试剑大会前夜，这里挤满了想借酒壮胆的年轻剑客。百晓生曰：酒壮怂人胆，但剑可不认酒。',
+  '中原 · 开封城外': '开封城外十里，旱魃肆虐三月有余。龟裂的土地、倒毙的流民、啃食尸骸的野狗——此乃承平五十年盛夏的开封。白莲教在此设粥棚十座，施粥赈灾。百晓生曰：乱世之中，一碗粥比一柄剑更难求。',
+};
+
 interface LocData {
   lat: number; lng: number; color: string; size: number; name: string;
   title: string; desc: string; chars: CharInfo[]; factionNote?: string;
@@ -447,12 +461,43 @@ const FACTION_LINES: { from: [number, number]; to: [number, number]; color: stri
 export function MapModal({ isOpen, onClose, onSend }: Props) {
   const [selectedLoc, setSelectedLoc] = useState<LocData | null>(null);
   const [expandedChar, setExpandedChar] = useState<string | null>(null);
+  const [curPos, setCurPos] = useState<{ lat: number; lng: number; loc: string } | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+
+  const flyToCurrent = useCallback(() => {
+    if (mapRef.current && curPos) {
+      mapRef.current.flyTo([curPos.lat, curPos.lng], 13, { duration: 1.5 });
+    }
+  }, [curPos]);
 
   useEffect(() => {
     if (!isOpen) return;
-    const map = L.map('dz-leaflet-map', { center: [34.5, 108], zoom: 5, minZoom: 3, maxZoom: 10, zoomControl: true, attributionControl: false });
+    const map = L.map('dz-leaflet-map', { center: [34.5, 108], zoom: 5, minZoom: 3, maxZoom: 13, zoomControl: true, attributionControl: false });
+    mapRef.current = map;
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
     const tp = map.getPane('tilePane'); if (tp) tp.style.filter = 'brightness(0.4) saturate(0.25) sepia(0.5) contrast(1.1)';
+
+    // Add pulsing marker at current position
+    import('../../sillytavern/database').then(({ getChats }) => {
+      getChats().then(chats => {
+        const vars = (chats[0]?.variables || {}) as Record<string, unknown>;
+        const ps = vars['主角状态'] as Record<string, unknown> | undefined;
+        const coord = ps?.['地图坐标'] as Record<string, number> | undefined;
+        if (coord?.lat && coord?.lng) {
+          const pos = { lat: coord.lat, lng: coord.lng, loc: (ps?.['当前所在地点'] as string) || '' };
+          setCurPos(pos);
+          const pulseIcon = L.divIcon({
+            className: '', iconSize: [24, 24], iconAnchor: [12, 12],
+            html: `<div style="position:relative;width:24px;height:24px;"><div style="position:absolute;inset:-8px;border-radius:50%;background:rgba(200,160,96,0.2);animation:map-pulse 2s ease-out infinite;"></div><div style="position:absolute;inset:0;border-radius:50%;background:#c8a060;border:3px solid #fff;box-shadow:0 0 12px rgba(200,160,96,0.5);"></div></div>`,
+          });
+          const dynamicDesc = (ps?.['当前所在地点描述'] as string) || '';
+          const locDesc = dynamicDesc || LOCATION_DESC[pos.loc] || '此地尚未被江湖百晓生踏足，无可奉告。';
+          const curMarker = L.marker([pos.lat, pos.lng], { icon: pulseIcon, interactive: true }).addTo(map);
+          curMarker.bindPopup(`<div style="font-family:'Noto Serif SC',serif;font-size:13px;line-height:1.8;color:#d4c5a0;max-width:260px;"><div style="font-size:16px;font-weight:700;color:#f0e0b0;letter-spacing:2px;margin-bottom:6px;border-bottom:1px solid #5a4a30;padding-bottom:6px;">📍 ${pos.loc}</div><div style="font-size:12px;color:#a09070;line-height:1.9;">${locDesc}</div></div>`);
+          setTimeout(() => map.flyTo([pos.lat, pos.lng], 13, { duration: 1.2 }), 400);
+        }
+      });
+    });
 
     ROUTES.forEach(r => {
       // Invisible wide buffer line for easier clicking
@@ -549,7 +594,19 @@ export function MapModal({ isOpen, onClose, onSend }: Props) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(40,30,15,0.95)', borderBottom: '2px solid #8b7355', flexShrink: 0 }}>
             <h2 style={{ fontFamily: "'Noto Serif SC', serif", fontSize: 20, fontWeight: 900, color: '#e8d5a3', letterSpacing: 8, margin: 0 }}>大周堪舆图</h2>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#a08c6a', cursor: 'pointer', fontSize: 22 }}>×</button>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              {curPos && (
+                <button onClick={flyToCurrent} title={curPos.loc} style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+                  background: 'rgba(200,160,96,0.15)', border: '1px solid rgba(200,160,96,0.4)',
+                  borderRadius: 4, color: '#e8d5a3', cursor: 'pointer',
+                  fontFamily: "'Noto Serif SC',serif", fontSize: 13,
+                }}>
+                  <Crosshair size={13} /> 当前位置
+                </button>
+              )}
+              <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#a08c6a', cursor: 'pointer', fontSize: 22 }}>×</button>
+            </div>
           </div>
           <div id="dz-leaflet-map" style={{ flex: 1, background: '#2a2518' }} />
         </div>

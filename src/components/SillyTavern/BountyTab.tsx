@@ -6,8 +6,13 @@ import { Crosshair, MapPin } from 'lucide-react';
 interface BountyEntry { name: string; bounty: number; crime?: string; lastSeen?: string; }
 
 function parseBounties(variables: Record<string, string | number>): BountyEntry[] {
-  const raw = variables['武林榜单与悬赏.悬赏榜'] || variables['悬赏榜'];
-  if (!raw) return [];
+  // Support both flat dot-notation keys AND nested objects
+  let raw: unknown = variables['武林榜单与悬赏.悬赏榜'] || variables['悬赏榜'];
+  if (!raw) {
+    const nested = variables['武林榜单与悬赏'];
+    if (nested && typeof nested === 'object') raw = (nested as Record<string,unknown>)['悬赏榜'];
+  }
+  if (!raw || !Array.isArray(raw)) return [];
   if (Array.isArray(raw)) {
     return raw.map((entry: unknown) => {
       if (typeof entry === 'object' && entry) {

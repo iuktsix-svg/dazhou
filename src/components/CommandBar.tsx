@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, Square, Heart, Sparkles, Skull, Coins } from 'lucide-react';
+import { Send, Square, Heart, Sparkles, Skull } from 'lucide-react';
 import type { ChatSession } from '../sillytavern';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 
 export function CommandBar({ onSend, onStop, isSending, chat }: Props) {
   const [input, setInput] = useState('');
-  const [stats, setStats] = useState({ hp: 0, hpMax: 100, mp: 0, mpMax: 100, demon: 0, location: '--', silver: 0 });
+  const [stats, setStats] = useState({ hp: 0, hpMax: 100, mp: 0, mpMax: 100, demon: 0 });
 
   useEffect(() => {
     const update = () => {
@@ -21,8 +21,6 @@ export function CommandBar({ onSend, onStop, isSending, chat }: Props) {
         hp: Number(p['当前气血'] || 0), hpMax: Number(p['气血上限'] || 100),
         mp: Number(p['当前真气'] || 0), mpMax: Number(p['真气上限'] || 100),
         demon: Number(p['心魔值'] || vars['心魔值'] || 0),
-        location: String(p['当前所在地点'] || vars['当前所在地点'] || '--'),
-        silver: Number(p['持有银两'] || vars['持有银两'] || 0),
       });
     };
     update();
@@ -47,11 +45,6 @@ export function CommandBar({ onSend, onStop, isSending, chat }: Props) {
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: stats.demon >= 80 ? '#c026d3' : 'var(--dz-text-dim)' }}>
           <Skull size={14} /> 心魔 {stats.demon}
-        </span>
-        <span style={{ color: 'var(--dz-text-dim)', fontSize: 14 }}>·</span>
-        <span style={{ fontSize: 14, color: 'var(--dz-text)' }}>{stats.location}</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, color: 'var(--dz-gold)' }}>
-          <Coins size={14} /> {stats.silver}两
         </span>
       </div>
 

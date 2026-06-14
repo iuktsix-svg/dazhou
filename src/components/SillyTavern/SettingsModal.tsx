@@ -1,283 +1,472 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSillytavern } from '../../hooks/useSillytavern';
-import { type AppSettings, type ApiConfig, type ApiEndpoint } from '../../sillytavern';
-import { Settings, Save, Wifi, Download, Trash2, Plus, MessageSquare } from 'lucide-react';
+import { type ApiEndpoint, type AppSettings } from '../../sillytavern';
+import { DEFAULT_VAR_PROMPT, DEFAULT_MEM_PROMPT } from '../../data/prompt-defaults';
+import { createDefaultPreset, DEFAULT_PROMPT_ORDER, type ChatPreset } from '../../sillytavern';
+import { Settings, Database, Archive, Filter, Variable, Brain, Plus, Trash2, Wifi, X, ChevronDown, Save, AlertCircle } from 'lucide-react';
 
 interface Props { onClose: () => void; }
 
-type Section = 'main' | 'api' | 'archive' | 'filter';
+type Section = 'api' | 'var' | 'mem' | 'preset' | 'archive' | 'filter';
+
+const NAV_ITEMS: { key: Section; label: string; icon: typeof Database }[] = [
+  { key: 'api', label: 'API 配置', icon: Database },
+  { key: 'var', label: '变量设置', icon: Variable },
+  { key: 'mem', label: '记忆设置', icon: Brain },
+  { key: 'preset', label: '预设设置', icon: Settings },
+  { key: 'archive', label: '存档管理', icon: Archive },
+  { key: 'filter', label: '正文过滤', icon: Filter },
+];
+
+function PresetPanel() {
+  const { presets, savePreset, deletePreset, settings, updateSettings } = useSillytavern();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ChatPreset | null>(null);
+  const [expandedEntry, setExpandedEntry] = useState<number | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleNew = () => {
+    const p = createDefaultPreset();
+    setForm(p); setEditingId(null);
+  };
+  const handleEdit = (p: ChatPreset) => {
+    setForm(JSON.parse(JSON.stringify(p))); setEditingId(p.id);
+  };
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      // Convert SillyTavern preset → ChatPreset
+      const systemPrompt = json.prompts?.find((p: Record<string,unknown>) => p.identifier === 'main' || p.role === 'system')?.content || '';
+      const importedPrompts = (json.prompts || []).map((p: Record<string,unknown>) => ({
+        name: String(p.name || ''),
+        identifier: String(p.identifier || ''),
+        role: String(p.role || 'system'),
+        content: String(p.content || ''),
+        enabled: Boolean(p.enabled),
+        injection_position: Number(p.injection_position || 0),
+      }));
+      const imported = {
+        id: crypto.randomUUID(),
+        name: file.name.replace(/\.json$/i, ''),
+        settings: {
+          temp_openai: json.temperature ?? 0.7,
+          openai_max_tokens: json.openai_max_tokens ?? 4096,
+          top_p_openai: json.top_p ?? 1,
+          freq_pen_openai: json.frequency_penalty ?? 0,
+          pres_pen_openai: json.presence_penalty ?? 0,
+          stream_openai: json.stream_openai ?? true,
+          top_k_openai: json.top_k,
+          min_p_openai: json.min_p,
+          repeat_pen_openai: json.repetition_penalty,
+        },
+        systemPrompt,
+        prompt_order: DEFAULT_PROMPT_ORDER.map(p => ({ ...p })),
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        _importedPrompts: importedPrompts,
+      } as unknown as ChatPreset;
+      await savePreset(imported);
+      // Auto-activate
+      await updateSettings({ activePresetId: imported.id });
+    } catch (err) {
+      alert('导入失败：' + (err instanceof Error ? err.message : '无效的 JSON'));
+    }
+    if (fileRef.current) fileRef.current.value = '';
+  };
+  const handleSave = async () => {
+    if (!form) return;
+    const saved = { ...form, updatedAt: Date.now() };
+    await savePreset(saved);
+    // Sync to disk so Claude can see changes
+    try { await fetch('/api/preset-sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: editingId ? 'updated' : 'created', presetName: saved.name, preset: { id: saved.id, name: saved.name, settings: saved.settings, systemPrompt: saved.systemPrompt?.slice(0, 300), entryCount: saved._importedPrompts?.length || 0, entries: saved._importedPrompts?.map(e => ({ name: e.name, role: e.role, enabled: e.enabled })) } }) }); } catch(e) { /* sync skipped */ }
+    if (!editingId && settings && !settings.activePresetId) await updateSettings({ activePresetId: saved.id });
+    setForm(null); setEditingId(null);
+  };
+  const handleDelete = async (id: string) => {
+    if (!confirm('删除此预设？')) return;
+    await deletePreset(id);
+    if (settings?.activePresetId === id) await updateSettings({ activePresetId: null });
+  };
+  const handleActivate = async (id: string) => {
+    await updateSettings({ activePresetId: id });
+  };
+
+  const activeId = settings?.activePresetId;
+
+  return (
+    <div className="st-panel">
+      <div className="st-panel-head"><h2>预设设置</h2>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="wx-btn-outline" onClick={() => fileRef.current?.click()}><Plus size={14} />导入预设</button>
+          <input ref={fileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+          <button className="wx-btn" onClick={handleNew}><Plus size={14} />新建预设</button>
+        </div>
+      </div>
+      <p className="st-desc">管理对话预设——温度、最大 token、提示词模板等。</p>
+
+      {/* Preset list */}
+      {presets.map(p => (
+        <div key={p.id} className={`st-card st-route-card ${activeId === p.id ? 'active' : ''}`} onClick={() => handleEdit(p)}>
+          <div style={{ flex: 1 }}>
+            <div className="st-api-name">{p.name} {activeId === p.id && <span className="st-route-badge main">使用中</span>}</div>
+            <div className="st-api-detail">
+              温度 {p.settings.temp_openai ?? 0.7} · max {p.settings.openai_max_tokens ?? 4096} · {p.settings.stream_openai ? '流式' : '非流式'}
+            </div>
+          </div>
+          <button className="wx-btn-sm wx-btn-outline" onClick={e => { e.stopPropagation(); handleActivate(p.id); }}>启用</button>
+          <button className="wx-btn-sm wx-btn-danger" onClick={e => { e.stopPropagation(); handleDelete(p.id); }}><Trash2 size={12} /></button>
+        </div>
+      ))}
+      {presets.length === 0 && <div className="st-empty">暂无预设</div>}
+
+      {/* Edit form */}
+      {form && (
+        <div className="st-card" style={{ marginTop: 16 }}>
+          <h3>{editingId ? '编辑预设' : '新建预设'}</h3>
+          <div className="st-form">
+            <label className="st-label">预设名称</label>
+            <input className="st-input" value={form.name} onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)} />
+            <label className="st-label">温度 (0-2)</label>
+            <input className="st-input" type="number" min={0} max={2} step={0.1} value={form.settings.temp_openai ?? 0.7} onChange={e => setForm(f => f ? { ...f, settings: { ...f.settings, temp_openai: Number(e.target.value) } } : f)} />
+            <label className="st-label">Max Tokens</label>
+            <input className="st-input" type="number" min={256} max={65536} step={256} value={form.settings.openai_max_tokens ?? 4096} onChange={e => setForm(f => f ? { ...f, settings: { ...f.settings, openai_max_tokens: Number(e.target.value) } } : f)} />
+            <label className="st-label">流式输出</label>
+            <label className="st-toggle-wrap"><input type="checkbox" checked={form.settings.stream_openai ?? true} onChange={e => setForm(f => f ? { ...f, settings: { ...f.settings, stream_openai: e.target.checked } } : f)} /><span className="st-toggle-track" /></label>
+
+            {/* System prompt */}
+            <label className="st-label" style={{ marginTop: 8 }}>系统提示词</label>
+            <textarea className="st-textarea" style={{ minHeight: 120 }} value={form.systemPrompt || ''} onChange={e => setForm(f => f ? { ...f, systemPrompt: e.target.value } : f)} />
+
+            {/* Imported prompt entries */}
+            {form?._importedPrompts && form._importedPrompts.length > 0 && (() => {
+              const prompts = form._importedPrompts;
+              return (
+              <div style={{ marginTop: 12 }}>
+                <label className="st-label">导入的条目（{prompts.length} 条）</label>
+                <div style={{ maxHeight: 460, overflow: 'auto', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)' }}>
+                  {prompts.map((p, i) => {
+                    const isOpen = expandedEntry === i;
+                    return (
+                      <div key={i} style={{ borderBottom: '1px solid var(--bdr-subtle)' }}>
+                        <div className={`st-entry-row ${isOpen ? 'open' : ''}`} onClick={() => setExpandedEntry(isOpen ? null : i)}>
+                          <label className="st-toggle-wrap" onClick={e => e.stopPropagation()}>
+                            <input type="checkbox" checked={!!p.enabled} onChange={e => { const updated = [...prompts]; updated[i] = { ...updated[i], enabled: e.target.checked }; setForm(f => f ? { ...f, _importedPrompts: updated } : f); }} />
+                            <span className="st-toggle-track" />
+                          </label>
+                          <span className="st-entry-name" style={{ color: p.enabled ? 'var(--wx-ink)' : 'var(--wx-ink-dim)' }}>{p.name || `条目 ${i+1}`}</span>
+                          <span className="st-entry-role">{p.role}</span>
+                          <ChevronDown size={12} style={{ color: 'var(--wx-ink-dim)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                        </div>
+                        {isOpen && (
+                          <div className="st-entry-body" onClick={e => e.stopPropagation()}>
+                            <label className="st-label">名称</label>
+                            <input className="st-input" value={p.name} onChange={e => { const u = [...prompts]; u[i] = { ...u[i], name: e.target.value }; setForm(f => f ? { ...f, _importedPrompts: u } : f); }} />
+                            <label className="st-label">角色</label>
+                            <select className="st-select" value={p.role} onChange={e => { const u = [...prompts]; u[i] = { ...u[i], role: e.target.value }; setForm(f => f ? { ...f, _importedPrompts: u } : f); }}>
+                              <option value="system">system</option><option value="user">user</option><option value="assistant">assistant</option>
+                            </select>
+                            <label className="st-label">内容</label>
+                            <textarea className="st-textarea" style={{ minHeight: 120, fontSize: 'var(--text-2xs)' }} value={p.content} onChange={e => { const u = [...prompts]; u[i] = { ...u[i], content: e.target.value }; setForm(f => f ? { ...f, _importedPrompts: u } : f); }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ); })()}
+
+            <div className="st-form-actions" style={{ marginTop: 8 }}>
+              <button className="wx-btn" onClick={handleSave}><Save size={14} />保存</button>
+              <button className="wx-btn-ghost" onClick={() => { setForm(null); setEditingId(null); }}>取消</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SettingsModal({ onClose }: Props) {
   const { settings, updateSettings, chats, createChat, loadChat, deleteChat, activeChatId } = useSillytavern();
-  const [form, setForm] = useState<AppSettings | null>(null);
-  const [section, setSection] = useState<Section>('main');
+
+  // Working copy for dirty tracking
+  const [draft, setDraft] = useState<AppSettings | null>(null);
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => { if (settings && !draft) setDraft(JSON.parse(JSON.stringify(settings))); }, [settings]);
+
+  const markDirty = useCallback((patch: Partial<AppSettings>) => {
+    setDraft(prev => prev ? { ...prev, ...patch } : prev);
+    setDirty(true);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!draft) return;
+    await updateSettings(draft);
+    setDirty(false);
+  }, [draft, updateSettings]);
+
+  const handleClose = useCallback(() => {
+    if (dirty) {
+      if (confirm('有未保存的更改，是否保存？')) handleSave().then(() => onClose());
+      else onClose();
+    } else onClose();
+  }, [dirty, handleSave, onClose]);
+
+  // ---- Common state ----
+  const [section, setSection] = useState<Section>('api');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [testStatus, setTestStatus] = useState<Record<string, 'idle' | 'testing' | 'success' | 'error'>>({});
+  const [fetchingModels, setFetchingModels] = useState<Record<string, boolean>>({});
+  const [models, setModels] = useState<Record<string, string[]>>({});
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [newChatName, setNewChatName] = useState('');
-  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [testMsg, setTestMsg] = useState('');
-  const [models, setModels] = useState<string[]>([]);
-  const [fetchingModels, setFetchingModels] = useState(false);
+  const [tagInput, setTagInput] = useState('');
 
-  useEffect(() => { if (settings) setForm(JSON.parse(JSON.stringify(settings))); }, [settings]);
-  const f = form || { id: 'app-settings', api: { primary: { enabled: true, baseUrl: '', apiKey: '', model: '' }, secondary: { enabled: false, baseUrl: '', apiKey: '', model: '' }, memory: { enabled: false, baseUrl: '', apiKey: '', model: '' } }, userName: '', characterName: '', activeLorebookIds: [], activePresetId: null, uiMode: 'game' as const, customTags: [], stripTags: [], createdAt: 0, updatedAt: 0 };
-  if (!f) return null;
+  const api = draft?.api;
+  const savedApis = api?.saved || [];
+  const stripTags = draft?.stripTags || [];
 
-  const handleSave = async () => { await updateSettings(f); onClose(); };
-  const updateEndpoint = (which: keyof ApiConfig, patch: Partial<ApiEndpoint>) =>
-    setForm(prev => prev ? { ...prev, api: { ...prev.api, [which]: { ...prev.api[which], ...patch } } } : prev);
-
-  const ep = f.api.primary;
-
-  const handleTestConnection = async () => {
-    if (!ep.baseUrl || !ep.apiKey) { setTestMsg('请先填写调用地址和秘钥'); setTestStatus('error'); return; }
-    setTestStatus('testing'); setTestMsg('');
-    try {
-      const res = await fetch(`${ep.baseUrl}/models`, { headers: { Authorization: `Bearer ${ep.apiKey}` } });
-      if (res.ok) { setTestStatus('success'); setTestMsg('连接成功'); }
-      else { setTestStatus('error'); setTestMsg(`HTTP ${res.status}`); }
-    } catch { setTestStatus('error'); setTestMsg('网络错误，请检查地址'); }
+  // ---- API helpers ----
+  const handleAddApi = () => {
+    if (!api) return;
+    const newApi: ApiEndpoint = { id: crypto.randomUUID(), name: '新接口', enabled: true, baseUrl: '', apiKey: '', model: '' };
+    markDirty({ api: { ...api, saved: [...savedApis, newApi] } });
+    setExpandedId(newApi.id);
   };
-
-  const handleFetchModels = async () => {
+  const handleUpdateApi = (id: string, patch: Partial<ApiEndpoint>) => {
+    if (!api) return;
+    markDirty({ api: { ...api, saved: savedApis.map(e => e.id === id ? { ...e, ...patch } : e) } });
+  };
+  const handleDeleteApi = (id: string) => {
+    if (!api) return;
+    if (!confirm('确定删除此接口？若其他设置引用了此接口，需重新分配路由。')) return;
+    markDirty({ api: { ...api, saved: savedApis.filter(e => e.id !== id), mainRouteId: api.mainRouteId === id ? null : api.mainRouteId, varRouteId: api.varRouteId === id ? null : api.varRouteId, memRouteId: api.memRouteId === id ? null : api.memRouteId, embedRouteId: api.embedRouteId === id ? null : api.embedRouteId } });
+  };
+  const handleTestApi = async (ep: ApiEndpoint) => {
+    setTestStatus(prev => ({ ...prev, [ep.id]: 'testing' }));
+    try { const res = await fetch(`${ep.baseUrl}/models`, { headers: { Authorization: `Bearer ${ep.apiKey}` } }); setTestStatus(prev => ({ ...prev, [ep.id]: res.ok ? 'success' : 'error' })); }
+    catch { setTestStatus(prev => ({ ...prev, [ep.id]: 'error' })); }
+  };
+  const handleFetchModels = async (ep: ApiEndpoint) => {
     if (!ep.baseUrl || !ep.apiKey) return;
-    setFetchingModels(true);
-    try {
-      const res = await fetch(`${ep.baseUrl}/models`, { headers: { Authorization: `Bearer ${ep.apiKey}` } });
-      if (res.ok) {
-        const data = await res.json();
-        const names = (data.data || []).map((m: Record<string, unknown>) => String(m.id || '')).filter(Boolean).sort();
-        setModels(names);
-      }
-    } catch { /* ignore */ }
-    setFetchingModels(false);
+    setFetchingModels(prev => ({ ...prev, [ep.id]: true }));
+    try { const res = await fetch(`${ep.baseUrl}/models`, { headers: { Authorization: `Bearer ${ep.apiKey}` } }); if (res.ok) { const data = await res.json(); setModels(prev => ({ ...prev, [ep.id]: (data.data || []).map((m: Record<string, unknown>) => String(m.id || '')).filter(Boolean).sort() })); } } catch { /* ignore */ }
+    setFetchingModels(prev => ({ ...prev, [ep.id]: false }));
   };
 
-  const handleCreateChat = async () => { await createChat(newChatName.trim() || undefined); setNewChatName(''); };
+  // ---- Feature toggle helpers ----
+  const toggleVar = (v: boolean) => markDirty({ varEnabled: v });
+  const toggleMem = (v: boolean) => markDirty({ memEnabled: v });
+  const setVarPrompt = (v: string) => markDirty({ varPrompt: v });
+  const setMemPrompt = (v: string) => markDirty({ memPrompt: v });
 
-  const cardStyle: React.CSSProperties = {
-    padding: '20px 22px', marginBottom: 10, background: 'var(--wx-card)',
-    border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)',
-    cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 14,
-    boxShadow: 'var(--sh-sm)',
+  // ---- Archive / Filter ----
+  const handleCreateChat = async () => { await createChat(newChatName.trim() || undefined); setNewChatName(''); };
+  const handleAddTag = () => { const t = tagInput.trim(); if (!t || stripTags.includes(t)) { setTagInput(''); return; }; markDirty({ stripTags: [...stripTags, t] }); setTagInput(''); };
+  const handleRemoveTag = (t: string) => { markDirty({ stripTags: stripTags.filter(x => x !== t) }); };
+
+  const renderPanel = () => {
+    // Helper for feature pages
+    const FeaturePage = ({ title, desc, enabled, onToggle, routeId, onRouteChange, prompt, onPromptChange, defaultPrompt }: {
+      title: string; desc: string; enabled?: boolean; onToggle: (v: boolean) => void;
+      routeId: string | null; onRouteChange: (id: string | null) => void;
+      prompt?: string; onPromptChange: (v: string) => void; defaultPrompt: string;
+    }) => {
+      return (
+        <div className="st-panel">
+          <h2>{title}</h2>
+          <p className="st-desc">{desc}</p>
+
+          <div className="st-card">
+            <div className="st-feat-row">
+              <div><div className="st-feat-label">启用功能</div></div>
+              <label className="st-toggle-wrap">
+                <input type="checkbox" checked={enabled ?? false} onChange={e => onToggle(e.target.checked)} />
+                <span className="st-toggle-track" />
+              </label>
+            </div>
+            <div className="st-feat-row" style={{ marginTop: 12 }}>
+              <div><div className="st-feat-label">选择路由</div></div>
+              <select className="st-select" value={routeId || ''} onChange={e => onRouteChange(e.target.value || null)}>
+                <option value="">未选择</option>
+                {savedApis.filter(e => e.enabled).map(e => (
+                  <option key={e.id} value={e.id}>{e.name} · {e.model}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="st-card" style={{ marginTop: 10 }}>
+            <div className="st-feat-row">
+              <h3 style={{ margin: 0 }}>提示词模版</h3>
+              <button className="wx-btn-sm wx-btn-outline" onClick={() => onPromptChange(defaultPrompt)}>恢复默认</button>
+            </div>
+            <textarea className="st-textarea" value={prompt || defaultPrompt} onChange={e => onPromptChange(e.target.value)}
+              placeholder="输入系统提示词…" spellCheck={false} />
+          </div>
+        </div>
+      );
+    };
+
+    switch (section) {
+      case 'api': return (
+        <div className="st-panel">
+          <div className="st-panel-head"><h2>API 配置</h2><button className="wx-btn" onClick={handleAddApi}><Plus size={14} />新增接口</button></div>
+          <p className="st-desc">管理接口库。正文路由在此选择，变量/记忆路由在各自设置页选择。</p>
+          <div className="st-card" style={{ marginBottom: 16 }}>
+            <div className="st-feat-row">
+              <div><div className="st-feat-label">正文路由</div><div className="st-api-detail">选择 AI 生成正文使用的接口</div></div>
+              <select className="st-select" value={api?.mainRouteId || ''} onChange={e => markDirty({ api: { ...api!, mainRouteId: e.target.value || null } })}>
+                <option value="">未选择</option>
+                {savedApis.filter(e => e.enabled).map(e => (<option key={e.id} value={e.id}>{e.name} · {e.model}</option>))}
+              </select>
+            </div>
+          </div>
+          {savedApis.length === 0 && <div className="st-empty">暂无接口，请点击"新增接口"</div>}
+          {savedApis.map(ep => {
+            const isExpanded = expandedId === ep.id;
+            const testState = testStatus[ep.id] || 'idle';
+            const modelList = models[ep.id] || [];
+            return (
+              <div key={ep.id} className={`st-api-card-wrap ${isExpanded ? 'expanded' : ''}`}>
+                <div className="st-api-collapsed" onClick={() => setExpandedId(isExpanded ? null : ep.id)}>
+                  <div className="st-api-collapsed-info">
+                    <div className="st-api-name">📡 {ep.name}</div>
+                    <div className="st-api-detail">{ep.model || '未配置模型'}</div>
+                    <div className="st-api-detail">{ep.baseUrl || '未配置地址'} · 🔑 {ep.apiKey ? ep.apiKey.slice(0,6) + '…' + ep.apiKey.slice(-4) : '未设置'}</div>
+                  </div>
+                  <div className="st-api-collapsed-right">
+                    <div className="st-route-badges">
+                      {api?.mainRouteId === ep.id && <span className="st-route-badge main">正文</span>}
+                      {api?.varRouteId === ep.id && <span className="st-route-badge var">变量</span>}
+                      {api?.memRouteId === ep.id && <span className="st-route-badge mem">记忆</span>}
+                    </div>
+                    <div className={`st-expand-arrow ${isExpanded ? 'open' : ''}`}><ChevronDown size={16} /></div>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="st-api-expanded" onClick={e => e.stopPropagation()}>
+                    <div className="st-form">
+                      <label className="st-label">接口名称</label>
+                      <input className="st-input" value={ep.name} onChange={e => handleUpdateApi(ep.id, { name: e.target.value })} />
+                      <label className="st-label">接口地址</label>
+                      <input className="st-input" value={ep.baseUrl} onChange={e => handleUpdateApi(ep.id, { baseUrl: e.target.value })} />
+                      <label className="st-label">API Key</label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input className="st-input" style={{ flex: 1 }} type={showKeys[ep.id] ? 'text' : 'password'} value={ep.apiKey} onChange={e => handleUpdateApi(ep.id, { apiKey: e.target.value })} placeholder="sk-…" />
+                        <button className="wx-btn-sm wx-btn-ghost" onClick={() => setShowKeys(p => ({ ...p, [ep.id]: !p[ep.id] }))}>{showKeys[ep.id] ? '隐藏' : '显示'}</button>
+                      </div>
+                      <div className="st-form-row">
+                        <button className="wx-btn-sm wx-btn-outline" onClick={() => handleTestApi(ep)}><Wifi size={12} />{testState === 'testing' ? '测试中…' : testState === 'success' ? '✓ 成功' : testState === 'error' ? '✗ 失败' : '测试连接'}</button>
+                        <button className="wx-btn-sm wx-btn-outline" onClick={() => handleFetchModels(ep)} disabled={fetchingModels[ep.id]}>{fetchingModels[ep.id] ? '拉取中…' : '拉取模型'}</button>
+                      </div>
+                      {modelList.length > 0 && (
+                        <div>
+                          <label className="st-label" style={{ marginTop: 8 }}>当前模型：{ep.model || '未选择'}</label>
+                          <select className="st-select" style={{ width: '100%' }} value={ep.model} onChange={e => handleUpdateApi(ep.id, { model: e.target.value })}>
+                            {modelList.map(m => <option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      <button className="wx-btn-sm wx-btn-danger" style={{ marginTop: 8 }} onClick={() => handleDeleteApi(ep.id)}><Trash2 size={12} />删除</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );})}
+        </div>
+      );
+
+      case 'var': return <FeaturePage title="变量设置" desc="根据剧情摘要更新游戏各面板的变量。" enabled={draft?.varEnabled} onToggle={toggleVar}
+        routeId={api?.varRouteId ?? null} onRouteChange={id => { if(api) markDirty({api:{...api,varRouteId:id}}); }}
+        prompt={draft?.varPrompt} onPromptChange={setVarPrompt} defaultPrompt={DEFAULT_VAR_PROMPT} />;
+
+      case 'mem': return (
+        <div className="st-panel">
+          <h2>记忆设置</h2>
+          <p className="st-desc">为每轮剧情提取关键词并存储记忆，在后续对话中检索相关记忆。</p>
+          <div className="st-card">
+            <div className="st-feat-row">
+              <div><div className="st-feat-label">启用功能</div></div>
+              <label className="st-toggle-wrap">
+                <input type="checkbox" checked={draft?.memEnabled ?? false} onChange={e => toggleMem(e.target.checked)} />
+                <span className="st-toggle-track" />
+              </label>
+            </div>
+            <div className="st-feat-row" style={{ marginTop: 12 }}>
+              <div><div className="st-feat-label">选择路由</div></div>
+              <select className="st-select" value={api?.memRouteId || ''} onChange={e => { if(api) markDirty({api:{...api,memRouteId:e.target.value||null}}); }}>
+                <option value="">未选择</option>
+                {savedApis.filter(e => e.enabled).map(e => (
+                  <option key={e.id} value={e.id}>{e.name} · {e.model}</option>
+                ))}
+              </select>
+            </div>
+            <div className="st-feat-row" style={{ marginTop: 12 }}>
+              <div><div className="st-feat-label">嵌入接口</div><div className="st-api-detail">向量语义搜索。留空使用关键词匹配。</div></div>
+              <select className="st-select" value={api?.embedRouteId || ''} onChange={e => { if(api) markDirty({api:{...api,embedRouteId:e.target.value||null}}); }}>
+                <option value="">不使用（纯关键词）</option>
+                {savedApis.filter(e => e.enabled).map(e => (<option key={e.id} value={e.id}>{e.name}</option>))}
+              </select>
+            </div>
+            {api?.embedRouteId && (
+              <div className="st-feat-row" style={{ marginTop: 8 }}>
+                <div><div className="st-feat-label">嵌入模型名</div></div>
+                <input className="st-input" style={{ width: 220 }} placeholder="如 text-embedding-3-small" value={draft?.embedModel || ''} onChange={e => markDirty({ embedModel: e.target.value })} />
+              </div>
+            )}
+          </div>
+          <div className="st-card" style={{ marginTop: 10 }}>
+            <div className="st-feat-row">
+              <h3 style={{ margin: 0 }}>提示词模版</h3>
+              <button className="wx-btn-sm wx-btn-outline" onClick={() => setMemPrompt(DEFAULT_MEM_PROMPT)}>恢复默认</button>
+            </div>
+            <textarea className="st-textarea" value={draft?.memPrompt || DEFAULT_MEM_PROMPT} onChange={e => setMemPrompt(e.target.value)}
+              placeholder="输入系统提示词…" spellCheck={false} />
+          </div>
+        </div>
+      );
+
+      case 'preset': return <PresetPanel />;
+      case 'archive': return (
+        <div className="st-panel"><h2>存档管理</h2>
+          <div className="st-card" style={{ marginBottom: 16 }}><div style={{ display: 'flex', gap: 8 }}><input className="st-input" style={{ flex: 1 }} placeholder="新存档名称…" value={newChatName} onChange={e => setNewChatName(e.target.value)} /><button className="wx-btn" onClick={handleCreateChat}><Plus size={14} />新建</button></div></div>
+          {chats.map(c => (<div key={c.id} className={`st-card st-route-card ${activeChatId === c.id ? 'active' : ''}`} onClick={() => { loadChat(c.id); onClose(); }}><div><div className="st-api-name">{c.name}</div><div className="st-api-detail">{c.messages.length} 条消息 · {new Date(c.updatedAt).toLocaleString('zh-CN')}</div></div><button className="wx-btn-sm wx-btn-danger" onClick={e => { e.stopPropagation(); if (confirm('删除？')) deleteChat(c.id); }}><Trash2 size={12} /></button></div>))}
+        </div>);
+
+      case 'filter': return (
+        <div className="st-panel"><h2>正文过滤</h2><p className="st-desc">这些标签的内容不会在正文中显示。</p>
+          <div className="st-card"><div style={{ display: 'flex', gap: 8 }}><input className="st-input" style={{ flex: 1 }} placeholder="标签名…" value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddTag(); }} /><button className="wx-btn" onClick={handleAddTag}><Plus size={14} />添加</button></div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>{stripTags.map(t => (<span key={t} className="st-tag">{t} <button onClick={() => handleRemoveTag(t)}>×</button></span>))}</div></div>
+        </div>);
+    }
   };
 
   return (
-    <div className="dz-modal-shell" onClick={section === 'main' ? onClose : undefined}>
-      <div className={`dz-modal-box ${section !== 'main' ? 'wide' : ''}`} onClick={e => e.stopPropagation()}>
-        <div className="dz-modal-head">
-          <h2>{section === 'main' ? '系统设置' : section === 'api' ? 'API 设置' : section === 'filter' ? '正文过滤' : '存档管理'}</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {section !== 'main' && (
-              <button onClick={() => setSection('main')} className="wx-btn wx-btn-outline" style={{ padding: '6px 14px', fontSize: 'var(--text-xs)' }}>返回</button>
-            )}
-            <button className="dz-modal-close-btn" onClick={onClose}>×</button>
-          </div>
+    <div className="st-root">
+      <nav className="st-nav">
+        <div className="st-nav-title">设置</div>
+        {NAV_ITEMS.map(item => (
+          <button key={item.key} className={`st-nav-item ${section === item.key ? 'active' : ''}`} onClick={() => setSection(item.key)}>
+            <item.icon size={16} strokeWidth={1.5} /><span>{item.label}</span>
+          </button>
+        ))}
+        <div style={{ flex: 1 }} />
+        <button className="st-nav-close" onClick={handleClose}><X size={18} /></button>
+      </nav>
+      <div className="st-content">
+        {/* Save bar */}
+        <div className="st-save-bar">
+          {dirty && <span className="st-dirty-badge"><AlertCircle size={12} />有未保存的更改</span>}
+          <button className={`wx-btn ${dirty ? 'wx-btn-red' : ''}`} onClick={handleSave} disabled={!dirty}>
+            <Save size={14} />保存
+          </button>
         </div>
-        <div className="dz-modal-body">
-          {/* ============ MAIN ============ */}
-          {section === 'main' && (
-            <>
-              <div onClick={() => setSection('api')} style={cardStyle} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--wx-vermillion)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(44,36,22,0.12)'}>
-                <div style={{ width: 44, height: 44, borderRadius: 'var(--rd-md)', background: 'var(--wx-vermillion-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Wifi size={20} style={{ color: 'var(--wx-vermillion)' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', marginBottom: 3 }}>API 设置</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>配置正文、变量、记忆三个 API 端点，测试连接并拉取模型列表</div>
-                </div>
-                <span style={{ color: 'var(--wx-ink-dim)', fontSize: 18 }}>›</span>
-              </div>
-
-              <div onClick={() => setSection('archive')} style={cardStyle} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--wx-gold)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(44,36,22,0.12)'}>
-                <div style={{ width: 44, height: 44, borderRadius: 'var(--rd-md)', background: 'var(--wx-gold-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Save size={20} style={{ color: 'var(--wx-gold)' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', marginBottom: 3 }}>存档管理</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>创建、切换、删除游戏存档 · {chats.length} 个存档</div>
-                </div>
-                <span style={{ color: 'var(--wx-ink-dim)', fontSize: 18 }}>›</span>
-              </div>
-
-              <div onClick={() => setSection('filter')} style={cardStyle} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--wx-cyan)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(44,36,22,0.12)'}>
-                <div style={{ width: 44, height: 44, borderRadius: 'var(--rd-md)', background: 'rgba(90,140,160,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Settings size={20} style={{ color: 'var(--wx-cyan)' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', marginBottom: 3 }}>正文过滤</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>管理正文中需要过滤的标签 · {(f.stripTags || []).length} 个规则</div>
-                </div>
-                <span style={{ color: 'var(--wx-ink-dim)', fontSize: 18 }}>›</span>
-              </div>
-
-              <div style={{ ...cardStyle, opacity: 0.5, cursor: 'default' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 'var(--rd-md)', background: 'rgba(44,36,22,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Settings size={20} style={{ color: 'var(--wx-ink-dim)' }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', marginBottom: 3 }}>角色与用户</div>
-                  <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>{f.userName || '未设置'} · {f.characterName || '未设置'}</div>
-                </div>
-                <span style={{ color: 'var(--wx-ink-dim)', fontSize: 12 }}>即将开放</span>
-              </div>
-            </>
-          )}
-
-          {/* ============ API ============ */}
-          {section === 'api' && (
-            <div>
-              {(['primary', 'secondary', 'memory'] as const).map(which => {
-                const ep = f.api[which];
-                const labels = { primary: '正文 API', secondary: '变量 API', memory: '记忆 API' };
-                const isPrimary = which === 'primary';
-                return (
-                  <div key={which} style={{ marginBottom: 22, padding: 18, background: 'var(--wx-card)', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                      <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--wx-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: isPrimary ? 'var(--wx-vermillion)' : which === 'secondary' ? 'var(--wx-gold)' : 'var(--wx-cyan)' }} />
-                        {labels[which]}
-                      </div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)' }}>
-                        <input type="checkbox" checked={ep?.enabled ?? false} onChange={e => updateEndpoint(which, { enabled: e.target.checked })} style={{ accentColor: 'var(--wx-vermillion)' }} />
-                        启用
-                      </label>
-                    </div>
-                    {ep?.enabled !== false && (
-                      <>
-                        <div style={{ marginBottom: 10 }}>
-                          <label style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)', display: 'block', marginBottom: 4 }}>调用地址 (Base URL)</label>
-                          <input value={ep?.baseUrl || ''} onChange={e => updateEndpoint(which, { baseUrl: e.target.value })} placeholder="https://api.openai.com/v1" style={{ width: '100%', padding: '9px 14px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-surface)', color: 'var(--wx-ink)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none' }} />
-                        </div>
-                        <div style={{ marginBottom: 10 }}>
-                          <label style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)', display: 'block', marginBottom: 4 }}>秘钥 (API Key)</label>
-                          <input type="password" value={ep?.apiKey || ''} onChange={e => updateEndpoint(which, { apiKey: e.target.value })} placeholder="sk-..." style={{ width: '100%', padding: '9px 14px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-surface)', color: 'var(--wx-ink)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none' }} />
-                        </div>
-                        <div style={{ marginBottom: 10 }}>
-                          <label style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)', display: 'block', marginBottom: 4 }}>模型 (Model)</label>
-                          <input value={ep?.model || ''} onChange={e => updateEndpoint(which, { model: e.target.value })} placeholder="gpt-4o" style={{ width: '100%', padding: '9px 14px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-surface)', color: 'var(--wx-ink)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none' }} />
-                        </div>
-                        {isPrimary && (
-                          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                            <button onClick={handleTestConnection} disabled={testStatus === 'testing'} className="wx-btn wx-btn-outline" style={{ padding: '8px 16px', fontSize: 'var(--text-xs)' }}>
-                              <Wifi size={14} /> {testStatus === 'testing' ? '测试中…' : '测试连接'}
-                            </button>
-                            <button onClick={handleFetchModels} disabled={fetchingModels} className="wx-btn wx-btn-outline" style={{ padding: '8px 16px', fontSize: 'var(--text-xs)' }}>
-                              <Download size={14} /> {fetchingModels ? '拉取中…' : '拉取模型'}
-                            </button>
-                          </div>
-                        )}
-                        {isPrimary && testMsg && (
-                          <div style={{ marginTop: 8, padding: '8px 14px', borderRadius: 'var(--rd-md)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', background: testStatus === 'success' ? 'rgba(90,140,106,0.1)' : 'rgba(181,40,26,0.08)', color: testStatus === 'success' ? 'var(--wx-jade)' : 'var(--wx-vermillion)' }}>
-                            {testMsg}
-                          </div>
-                        )}
-                        {isPrimary && models.length > 0 && (
-                          <div style={{ marginTop: 10 }}>
-                            <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)', marginBottom: 6 }}>可用模型 ({models.length})</div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                              {models.slice(0, 30).map(m => (
-                                <button key={m} onClick={() => updateEndpoint('primary', { model: m })} style={{
-                                  padding: '5px 12px', border: `1px solid ${ep.model === m ? 'var(--wx-vermillion)' : 'var(--bdr-subtle)'}`,
-                                  borderRadius: 'var(--rd-full)', background: ep.model === m ? 'var(--wx-vermillion-dim)' : 'var(--wx-surface)',
-                                  color: ep.model === m ? 'var(--wx-vermillion)' : 'var(--wx-ink-dim)', cursor: 'pointer',
-                                  fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)',
-                                }}>{m}</button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ============ ARCHIVE ============ */}
-          {/* ============ FILTER ============ */}
-          {section === 'filter' && (
-            <div>
-              <div style={{ marginBottom: 18, fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--wx-ink-dim)', lineHeight: 1.7 }}>
-                这些标签及其内容会从正文显示中自动过滤。标签名不含尖括号。
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                <input id="new-tag-input" placeholder="输入标签名…" style={{ flex: 1, padding: '9px 14px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-surface)', color: 'var(--wx-ink)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none' }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      const inp = e.currentTarget;
-                      const v = inp.value.trim();
-                      if (v) {
-                        setForm(prev => prev ? { ...prev, stripTags: [...(prev.stripTags || []), v] } : prev);
-                        inp.value = '';
-                      }
-                    }
-                  }} />
-                <button onClick={() => {
-                  const inp = document.getElementById('new-tag-input') as HTMLInputElement;
-                  const v = inp?.value?.trim();
-                  if (v) { setForm(prev => prev ? { ...prev, stripTags: [...(prev.stripTags || []), v] } : prev); inp.value = ''; }
-                }} className="wx-btn wx-btn-outline" style={{ padding: '9px 16px' }}>添加</button>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {(f.stripTags || ['thinking', 'think', 'sum', 'vars']).map((tag, i) => (
-                  <div key={tag + i} style={{
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
-                    background: 'var(--wx-card)', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-full)',
-                    fontFamily: 'var(--font-mono)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)',
-                  }}>
-                    &lt;{tag}&gt;
-                    <button onClick={() => {
-                      setForm(prev => prev ? { ...prev, stripTags: (prev.stripTags || []).filter((_, j) => j !== i) } : prev);
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--wx-vermillion)', fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {section === 'archive' && (
-            <div>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
-                <input value={newChatName} onChange={e => setNewChatName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleCreateChat(); }}
-                  placeholder="新存档名称（可选）" style={{ flex: 1, padding: '9px 14px', border: '1px solid var(--bdr-subtle)', borderRadius: 'var(--rd-md)', background: 'var(--wx-surface)', color: 'var(--wx-ink)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', outline: 'none' }} />
-                <button onClick={handleCreateChat} className="wx-btn wx-btn-red" style={{ padding: '9px 20px' }}><Plus size={16} /> 新建</button>
-              </div>
-
-              {chats.length === 0 ? (
-                <div className="wx-empty"><div className="tl">暂无存档</div><div className="gd">创建一个存档开始游戏</div></div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 340, overflow: 'auto' }}>
-                  {chats.map(chat => (
-                    <div key={chat.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: chat.id === activeChatId ? 'var(--wx-vermillion-dim)' : 'var(--wx-card)', border: `1px solid ${chat.id === activeChatId ? 'var(--wx-vermillion-dim)' : 'var(--bdr-subtle)'}`, borderRadius: 'var(--rd-md)', cursor: 'pointer', transition: 'all 0.2s' }}>
-                      <div style={{ flex: 1, minWidth: 0 }} onClick={() => { loadChat(chat.id); onClose(); }}>
-                        <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--wx-ink)', fontSize: 'var(--text-base)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <MessageSquare size={14} style={{ color: 'var(--wx-vermillion)' }} />
-                          {chat.name}
-                          {chat.id === activeChatId && <span style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-2xs)', color: 'var(--wx-vermillion)', background: 'var(--wx-vermillion-dim)', padding: '2px 8px', borderRadius: 'var(--rd-full)' }}>当前</span>}
-                        </div>
-                        <div style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-xs)', color: 'var(--wx-ink-dim)', marginTop: 4 }}>
-                          {chat.messages.length} 条消息 · {new Date(chat.updatedAt).toLocaleString('zh-CN')}
-                        </div>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); if (confirm('确定删除此存档？')) deleteChat(chat.id); }}
-                        className="wx-btn wx-btn-outline" style={{ padding: '5px 14px', fontSize: 'var(--text-xs)' }}>
-                        <Trash2 size={13} /> 删除
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-        </div>
-        {section === 'api' && (
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 8, justifyContent: 'flex-end', padding: '12px 22px', borderTop: '1px solid var(--bdr-subtle)' }}>
-            <button onClick={handleSave} className="wx-btn wx-btn-red">保存设置</button>
-            <button onClick={onClose} className="wx-btn wx-btn-outline">关闭</button>
-          </div>
-        )}
-        <div className="dz-modal-foot" />
+        {renderPanel()}
       </div>
     </div>
   );

@@ -16,9 +16,14 @@ const RANKING_TABS = [
 type RT = typeof RANKING_TABS[number]['key'];
 
 function parseRankings(variables: Record<string, string | number>, tab: string): RankEntry[] {
+  // Support both flat dot-notation keys AND nested objects
   const baseKey = `武林榜单与悬赏.${tab}`;
-  const raw = variables[baseKey] || variables['武林榜单与悬赏'];
-  if (!raw) return [];
+  let raw: unknown = variables[baseKey];
+  if (!raw) {
+    const nested = variables['武林榜单与悬赏'];
+    if (nested && typeof nested === 'object') raw = (nested as Record<string,unknown>)[tab];
+  }
+  if (!raw || !Array.isArray(raw)) return [];
   if (Array.isArray(raw)) {
     return raw.map((entry: unknown, idx: number) => {
       if (typeof entry === 'object' && entry) {

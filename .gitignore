@@ -27,3 +27,4 @@ src/lorebooks/*.bak
 *.njsproj
 *.sln
 *.sw?
+.last-preset.json

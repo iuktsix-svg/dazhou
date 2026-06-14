@@ -24,12 +24,26 @@ export function assemblePrompt(input: PromptAssemblyInput): PromptAssemblyResult
   const ctx = assembleContext(matches);
 
   // 2. Build system prompt
-  const systemPrompt = buildSystemPrompt({
+  let systemPrompt = buildSystemPrompt({
     preset,
     characterName,
     userName,
     variables,
   });
+
+  // 2.5 Inject enabled preset entries into system prompt
+  const importedEntries = (preset as ChatPreset & { _importedPrompts?: { name: string; role: string; content: string; enabled: boolean }[] })._importedPrompts;
+  const extraMessages: PromptMessage[] = [];
+  if (importedEntries) {
+    for (const entry of importedEntries) {
+      if (!entry.enabled || !entry.content?.trim()) continue;
+      if (entry.role === 'system') {
+        systemPrompt += '\n\n' + entry.content;
+      } else if (entry.role === 'user' || entry.role === 'assistant') {
+        extraMessages.push({ role: entry.role, content: entry.content });
+      }
+    }
+  }
 
   // 3. Build messages according to prompt_order
   const order = preset.prompt_order?.length ? preset.prompt_order : getDefaultOrder();
@@ -44,6 +58,19 @@ export function assemblePrompt(input: PromptAssemblyInput): PromptAssemblyResult
     preset,
     lorebookCtx: ctx,
   });
+
+  // Insert extra preset messages before the last user message
+  if (extraMessages.length > 0) {
+    const lastUserIdx = messages.map((m, i) => m.role === 'user' ? i : -1).filter(i => i >= 0).pop();
+    const insertAt = lastUserIdx !== undefined ? lastUserIdx : messages.length;
+    messages.splice(insertAt, 0, ...extraMessages);
+  }
+
+  // Append <sum> requirement to user message
+  const lastMsg = messages[messages.length - 1];
+  if (lastMsg && lastMsg.role === 'user') {
+    lastMsg.content += '\n\n[系统指令：请在回复末尾用 <sum>标签</sum> 输出本次剧情摘要，100-200字。]';
+  }
 
   return {
     messages,
@@ -166,6 +193,21 @@ function buildSystemPrompt(ctx: Pick<BuildContext, 'preset' | 'characterName' | 
   prompt += `4. 列表/数组类变量（如随身行囊、追杀榜、江湖人际录），发生变化时输出完整的最终列表，替换旧值。\n`;
   prompt += `5. 物品消耗、银两收支、榜单变动、人物关系变化——这些是最常见的变量更新触发条件。\n`;
   prompt += `6. 如果本轮没有任何变量变化，不输出任何 <var> 标签。\n\n`;
+
+  prompt += `【剧情摘要（必须输出）】\n`;
+  prompt += `在每轮回复的最后，必须用 <sum> 标签输出一段本次剧情的摘要。\n`;
+  prompt += `摘要要求：\n`;
+  prompt += `1. 概括本轮发生的核心事件（地点变化、人物出场/退场、战斗结果、对话结论）\n`;
+  prompt += `2. 列出涉及的物品得失（获得/消耗/交易了什么）\n`;
+  prompt += `3. 列出涉及的人物关系变化（新增/加深/恶化的人际关系）\n`;
+  prompt += `4. 100-200字，纯叙事，不包含变量标签\n`;
+  prompt += `格式：<sum>剧情摘要内容</sum>\n`;
+  prompt += `此摘要将用于后续的变量更新和记忆存储，请务必认真撰写。\n\n`;
+
+  prompt += `【场景转场】\n`;
+  prompt += `当剧情发生时间跳跃或地点转换时，使用 <transition> 标签标记。\n`;
+  prompt += `例如：<transition>片刻之后</transition> 或 <transition>翌日清晨 · 洛阳城门</transition>\n`;
+  prompt += `转场标签应放在新场景的叙事正文之前。\n\n`;
 
   prompt += `【武学境界跨文化命名规则】\n`;
   prompt += `大周十三州的武学境界通用标准为：凡骨→淬体→冲脉→通明→入微→绝顶→宗师→天人。\n`;

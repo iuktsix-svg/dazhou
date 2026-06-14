@@ -1,0 +1,359 @@
+/* ============================================================
+   LOREBOOK EDITOR APP — Standalone full-screen layout
+   ============================================================ */
+
+.lea-root {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--wx-paper);
+  color: var(--wx-ink);
+  font-family: var(--font-body);
+}
+
+/* ---- Panels ---- */
+.lea-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.lea-panel-left {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: var(--bdr-subtle);
+  background: var(--wx-surface);
+}
+.lea-panel-mid {
+  width: 340px;
+  flex-shrink: 0;
+  border-right: var(--bdr-subtle);
+  background: var(--wx-card);
+}
+.lea-panel-right {
+  flex: 1;
+  min-width: 0;
+  background: var(--wx-paper);
+  overflow-y: auto;
+}
+
+/* ---- Panel head ---- */
+.lea-panel-head {
+  padding: 16px 16px 12px;
+  border-bottom: var(--bdr-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lea-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-title);
+  font-size: var(--text-lg);
+  color: var(--wx-vermillion);
+  margin: 0;
+  letter-spacing: 0.06em;
+}
+.lea-panel-actions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: var(--bdr-subtle);
+}
+
+/* ---- Book list ---- */
+.lea-book-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.lea-book-item {
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: var(--rd-md);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.lea-book-item:hover {
+  background: var(--wx-card-hover);
+}
+.lea-book-item.selected {
+  background: var(--wx-vermillion-dim);
+  border-color: var(--wx-vermillion);
+}
+.lea-book-item.active {
+  /* subtle indicator */;
+}
+.lea-book-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.lea-book-name {
+  font-family: var(--font-title);
+  font-size: var(--text-sm);
+  color: var(--wx-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lea-book-count {
+  font-size: var(--text-2xs);
+  color: var(--wx-ink-dim);
+  background: var(--wx-surface-dark);
+  padding: 1px 7px;
+  border-radius: var(--rd-full);
+  flex-shrink: 0;
+}
+.lea-book-item-foot {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+}
+.lea-book-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: none;
+  border: none;
+  color: var(--wx-ink-dim);
+  cursor: pointer;
+  border-radius: var(--rd-sm);
+}
+.lea-book-toggle:hover { color: var(--wx-ink); }
+.lea-book-toggle.on { color: var(--wx-vermillion); }
+.lea-book-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  background: none;
+  border: none;
+  color: var(--wx-ink-dim);
+  cursor: pointer;
+  border-radius: var(--rd-sm);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.lea-book-item:hover .lea-book-btn { opacity: 1; }
+.lea-book-btn:hover { color: var(--wx-ink); background: var(--wx-card-hover); }
+.lea-book-btn.danger:hover { color: var(--wx-vermillion); background: var(--wx-vermillion-dim); }
+
+/* ---- Book meta inputs ---- */
+.lea-book-title-input {
+  font-family: var(--font-title);
+  font-size: var(--text-base);
+  color: var(--wx-ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--rd-sm);
+  padding: 4px 8px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.lea-book-title-input:focus {
+  border-color: var(--wx-vermillion);
+  background: var(--wx-surface);
+}
+.lea-book-desc-input {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--wx-ink-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--rd-sm);
+  padding: 3px 8px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.lea-book-desc-input:focus {
+  border-color: var(--wx-vermillion);
+  background: var(--wx-surface);
+}
+
+/* ---- Toolbar ---- */
+.lea-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: var(--bdr-subtle);
+}
+
+/* Search */
+.lea-search-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+.lea-search-icon {
+  position: absolute;
+  left: 8px;
+  color: var(--wx-ink-dim);
+  pointer-events: none;
+}
+.lea-search-input {
+  width: 100%;
+  padding: 6px 28px 6px 26px;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--wx-ink);
+  background: var(--wx-surface);
+  border: 1px solid var(--bdr-subtle);
+  border-radius: var(--rd-md);
+  outline: none;
+}
+.lea-search-input:focus { border-color: var(--wx-vermillion); }
+.lea-search-input::placeholder { color: var(--wx-ink-dim); opacity: 0.5; }
+.lea-search-clear {
+  position: absolute; right: 4px;
+  background: none; border: none;
+  color: var(--wx-ink-dim); cursor: pointer;
+  padding: 2px; border-radius: 50%;
+  display: flex;
+}
+.lea-search-clear:hover { color: var(--wx-vermillion); }
+
+/* Sort */
+.lea-sort-btns {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--wx-ink-dim);
+  font-size: var(--text-2xs);
+}
+.lea-sort-btn {
+  padding: 3px 6px;
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  color: var(--wx-ink-dim);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--rd-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lea-sort-btn:hover { color: var(--wx-ink); }
+.lea-sort-btn.active { color: var(--wx-vermillion); border-color: var(--wx-vermillion); background: var(--wx-vermillion-dim); }
+
+/* ---- Entry list ---- */
+.lea-entry-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+.lea-entry-card {
+  display: flex;
+  align-items: stretch;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: var(--wx-surface);
+  border: 1px solid var(--bdr-subtle);
+  border-radius: var(--rd-md);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.lea-entry-card:hover { border-color: var(--wx-vermillion); }
+.lea-entry-card.disabled { opacity: 0.45; }
+.lea-entry-card.editing { border-color: var(--wx-vermillion); box-shadow: 0 0 0 1px rgba(197,48,48,0.15); }
+.lea-entry-body { flex: 1; min-width: 0; }
+.lea-entry-keys { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
+.lea-entry-key-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: var(--font-body);
+  font-size: var(--text-2xs);
+  color: var(--wx-vermillion);
+  background: var(--wx-vermillion-dim);
+  border-radius: var(--rd-full);
+  white-space: nowrap;
+}
+.lea-entry-preview {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--wx-ink);
+  line-height: var(--leading-tight);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.lea-entry-meta {
+  display: flex;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  color: var(--wx-ink-dim);
+}
+.lea-tag-const { color: var(--wx-vermillion); font-weight: 600; }
+.lea-tag-off { color: var(--wx-ink-dim); }
+.lea-entry-del {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  background: none;
+  border: none;
+  color: var(--wx-ink-dim);
+  cursor: pointer;
+  border-radius: var(--rd-sm);
+  opacity: 0;
+  transition: all 0.15s;
+}
+.lea-entry-card:hover .lea-entry-del { opacity: 1; }
+.lea-entry-del:hover { color: var(--wx-vermillion); background: var(--wx-vermillion-dim); }
+.lea-no-keys { font-size: var(--text-2xs); color: var(--wx-ink-dim); font-style: italic; }
+.lea-chip-more { font-size: var(--text-2xs); color: var(--wx-ink-dim); }
+
+/* ---- Empty states ---- */
+.lea-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--wx-ink-dim);
+  opacity: 0.5;
+  gap: 12px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+}
+.lea-empty-state-sm {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--wx-ink-dim);
+  font-size: var(--text-sm);
+  opacity: 0.6;
+}
+
+/* ---- Right panel editor wrap ---- */
+.lea-editor-wrap {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.ve-inline {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.ve-inline .dz-modal-head {
+  flex-shrink: 0;
+}
+.ve-inline .ve-body {
+  flex: 1;
+  overflow-y: auto;
+}
+.ve-inline .ve-action-bar {
+  flex-shrink: 0;
+}
+.ve-inline .ve-box { max-width: none; }

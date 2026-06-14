@@ -1,4 +1,4 @@
-import { Settings, Users, Newspaper, Trophy, Map, Crosshair, Sun, Moon } from 'lucide-react';
+import { Settings, Users, Newspaper, Trophy, Map, Crosshair, Sun, Moon, Home } from 'lucide-react';
 
 const PANEL_BTNS = [
   { id: 'contacts' as const, label: '人脉', icon: Users },
@@ -13,14 +13,19 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 interface Props {
   onOpenPanel: (panel: PanelId) => void;
   onOpenSettings: () => void;
+  onHome: () => void;
   theme: string;
   onToggleTheme: () => void;
 }
 
-export function SideNav({ onOpenPanel, onOpenSettings, theme, onToggleTheme }: Props) {
+export function SideNav({ onOpenPanel, onOpenSettings, onHome, theme, onToggleTheme }: Props) {
   return (
     <nav className="dz-sidenav">
       <div className="dz-logo-wrap"><div className="dz-logo-diamond" /><span className="dz-logo-text">暮</span></div>
+
+      <button className="dz-home-btn" onClick={onHome} title="返回首页">
+        <Home size={16} strokeWidth={1.5} />
+      </button>
 
       {PANEL_BTNS.map(item => (
         <button key={item.id} className="dz-nav-item" onClick={() => onOpenPanel(item.id as PanelId)} title={item.label}>

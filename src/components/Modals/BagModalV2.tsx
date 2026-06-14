@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useSillytavern } from '../../hooks/useSillytavern';
+import { useEffect, useState, useCallback } from 'react';
+import { getChats, saveChat } from '../../sillytavern/database';
+import type { ChatSession } from '../../sillytavern';
 
 interface Props { isOpen: boolean; onClose: () => void; onSend: (t: string) => void; }
 interface ItemData { 物品类型?: string; 物品描述?: string; 数量?: number; type?: string; description?: string; quantity?: number; }
@@ -16,18 +17,45 @@ const TYPE_META: Record<string, { char: string; bg: string; border: string; text
 };
 
 export function BagModal({ isOpen, onClose, onSend }: Props) {
-  const { activeChat } = useSillytavern();
   const [items, setItems] = useState<Record<string, ItemData>>({});
   const [sel, setSel] = useState<string | null>(null);
   const [silver, setSilver] = useState(0);
 
+  const moveToWarehouse = useCallback(async (itemName: string) => {
+    const chats = await getChats();
+    const chat = chats[0] as ChatSession | undefined;
+    if (!chat) return;
+    const vars = (chat.variables || {}) as unknown as Record<string, Record<string, unknown>>;
+    const bag = (vars['随身行囊'] || {}) as Record<string, { 数量?: number; 物品类型?: string; 物品描述?: string }>;
+    const wh = (vars['仓库'] || {}) as Record<string, { 数量?: number; 物品类型?: string; 物品描述?: string }>;
+    const item = bag[itemName];
+    if (!item) return;
+
+    // Move: decrease bag count, add to warehouse
+    const qty = item['数量'] || 1;
+    if (wh[itemName]) wh[itemName]['数量'] = (wh[itemName]['数量'] || 0) + qty;
+    else wh[itemName] = { ...item, '数量': qty };
+    delete bag[itemName];
+
+    // Insert silent system message to inform AI
+    const sysMsg = { id: crypto.randomUUID(), role: 'system' as const, content: `[系统] 已将「${itemName}」×${qty} 从背囊存入仓库。`, timestamp: Date.now(), variables: {} };
+    const updated = { ...chat, variables: vars as unknown as Record<string, string|number>, messages: [...chat.messages, sysMsg], updatedAt: Date.now() };
+    await saveChat(updated);
+
+    // Refresh UI
+    setItems({ ...bag });
+    setSel(null);
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
-    const v = (activeChat?.variables || {}) as Record<string, unknown>;
-    const p = (v['主角状态'] || {}) as Record<string, unknown>;
-    setItems((v['随身行囊'] || {}) as Record<string, ItemData>);
-    setSilver(Number(p['持有银两'] || v['持有银两'] || 0));
-  }, [isOpen, activeChat]);
+    getChats().then(chats => {
+      const v = (chats[0]?.variables || {}) as Record<string, unknown>;
+      const p = (v['主角状态'] || {}) as Record<string, unknown>;
+      setItems((v['随身行囊'] || {}) as Record<string, ItemData>);
+      setSilver(Number(p['持有银两'] || v['持有银两'] || 0));
+    });
+  }, [isOpen]);
 
   if (!isOpen) return null;
   const keys = Object.keys(items);
@@ -87,7 +115,7 @@ export function BagModal({ isOpen, onClose, onSend }: Props) {
             </div>
             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
               <button className="wx-btn wx-btn-outline" style={{ padding: '5px 12px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`丢弃行囊中的【${sel}】。`); onClose(); }}>丢弃</button>
-              <button className="wx-btn wx-btn-outline" style={{ padding: '5px 12px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`将行囊中的【${sel}】存入仓库。`); onClose(); }}>存仓库</button>
+              <button className="wx-btn wx-btn-outline" style={{ padding: '5px 12px', fontSize: 'var(--text-xs)' }} onClick={() => { moveToWarehouse(sel!); onClose(); }}>存仓库</button>
               <button className="wx-btn wx-btn-red" style={{ padding: '5px 14px', fontSize: 'var(--text-xs)' }} onClick={() => { onSend(`从行囊中取出【${sel}】并尝试使用它`); onClose(); }}>使用</button>
             </div>
           </div>

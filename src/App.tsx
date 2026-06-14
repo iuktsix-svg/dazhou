@@ -19,6 +19,7 @@ import { NewGameFlow } from './components/NewGameFlow';
 import { ArchiveModal } from './components/ArchiveModal';
 import { ChangelogModal } from './components/ChangelogModal';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
+import { FullscreenToggle } from './components/FullscreenToggle';
 import './styles/tokens.css';
 import './App.css';
 
@@ -26,7 +27,7 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 type DrawerType = 'realm' | 'status' | 'martial' | null;
 
 function App() {
-  const { isLoading, activeChat, chats, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, setActiveChatId } = useSillytavern();
+  const { isLoading, activeChat, activeChatId, chats, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, setChats, setActiveChatId, editMessage, deleteMessagesFrom } = useSillytavern();
   const { notify } = useNotify();
   const { theme, toggle: toggleTheme } = useTheme();
   const [panel, setPanel] = useState<PanelId>(null);
@@ -46,6 +47,14 @@ function App() {
   const openDrawer = useCallback((d: DrawerType) => { setDrawer(d); if (d) setPanel(null); }, []);
   const openPanel = useCallback((p: PanelId) => { setPanel(p); setDrawer(null); }, []);
   const handleSend = useCallback((text: string) => { sendMessage(text); }, [sendMessage]);
+  const handleRegenerate = useCallback(() => {
+    const msgs = activeChat?.messages || [];
+    const lastAI = [...msgs].reverse().find(m => m.role === 'assistant');
+    const lastUser = [...msgs].reverse().find(m => m.role === 'user');
+    if (lastAI) deleteMessagesFrom(lastAI.id);
+    if (lastUser) sendMessage(lastUser.content);
+  }, [activeChat, deleteMessagesFrom, sendMessage]);
+  const handleEditMessage = useCallback((id: string, text: string) => { editMessage(id, text); }, [editMessage]);
 
   // Auto-select first chat when entering main game with chats but no active
   useEffect(() => {
@@ -59,7 +68,7 @@ function App() {
   return (
     <NotificationCenter>
       {showNewGame ? (
-        <NewGameFlow onStart={() => { setShowNewGame(false); setShowWelcome(false); }} />
+        <NewGameFlow onStart={(chat) => { if (chat) { console.log("[App] onStart chat var keys:", Object.keys(chat.variables)); setChats(prev => [...prev, chat]); setActiveChatId(chat.id); } setShowNewGame(false); setShowWelcome(false); }} />
       ) : showWelcome ? (
         <WelcomePage
           onNewGame={() => { setShowNewGame(true); }}
@@ -70,10 +79,14 @@ function App() {
       ) : (
         <div className="dz-root">
         <div className="dz-body-row">
-          <SideNav onOpenPanel={openPanel} onOpenSettings={() => setShowSettings(true)} theme={theme} onToggleTheme={toggleTheme} />
+          <SideNav onOpenPanel={openPanel} onOpenSettings={() => setShowSettings(true)} onHome={() => setShowWelcome(true)} theme={theme} onToggleTheme={toggleTheme} />
 
           <main className="dz-main">
-            <StoryArea messages={activeChat?.messages || []} streamingText={streamingText} isStreaming={isSending} onOption={handleSend} />
+            <StoryArea messages={activeChat?.messages || []} streamingText={streamingText} isStreaming={isSending}
+              chatId={activeChatId}
+              statusLocation={(()=>{ const c = chats.find(x=>x.id===activeChatId); return (c?.variables as any)?.['主角状态']?.['当前所在地点'] || ''; })()}
+              statusTime={(()=>{ const c = chats.find(x=>x.id===activeChatId); return (c?.variables as any)?.['系统与时辰']?.['当前时辰'] || ''; })()}
+              onOption={handleSend} onRegenerate={handleRegenerate} onEditMessage={handleEditMessage} />
             <CommandBar onSend={handleSend} onStop={cancelGeneration} isSending={isSending} chat={activeChat} />
           </main>
 
@@ -100,6 +113,7 @@ function App() {
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
+      <FullscreenToggle />
     </NotificationCenter>
   );
 }

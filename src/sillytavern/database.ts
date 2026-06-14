@@ -3,13 +3,14 @@
 // ============================================================
 
 import Dexie, { type Table } from 'dexie';
-import type { Lorebook, ChatPreset, AppSettings, ChatSession } from './types';
+import type { Lorebook, ChatPreset, AppSettings, ChatSession, MemoryEntry } from './types';
 
 export class TavernDB extends Dexie {
   lorebooks!: Table<Lorebook, string>;
   presets!: Table<ChatPreset, string>;
   settings!: Table<AppSettings, string>;
   chats!: Table<ChatSession, string>;
+  memories!: Table<MemoryEntry, string>;
 
   constructor() {
     super('tavernlike-db');
@@ -19,10 +20,17 @@ export class TavernDB extends Dexie {
       settings: 'id',
       chats: 'id, name, characterName, updatedAt',
     });
+    this.version(2).stores({
+      lorebooks: 'id, name, updatedAt',
+      presets: 'id, name, updatedAt',
+      settings: 'id',
+      chats: 'id, name, characterName, updatedAt',
+      memories: 'id, chatId, timestamp',
+    });
   }
 }
 
-const db = new TavernDB();
+export const db = new TavernDB();
 
 let initialized = false;
 

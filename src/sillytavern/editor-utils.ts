@@ -96,11 +96,11 @@ export function createDefaultPreset(name?: string): ChatPreset {
     name: name || 'Default Preset',
     settings: {
       temp_openai: 0.7,
-      openai_max_tokens: 1024,
+      openai_max_tokens: 8192,
       top_p_openai: 1,
       freq_pen_openai: 0,
       pres_pen_openai: 0,
-      stream_openai: false,
+      stream_openai: true,
     },
     prompt_order: DEFAULT_PROMPT_ORDER.map(p => ({ ...p })),
     createdAt: now,
