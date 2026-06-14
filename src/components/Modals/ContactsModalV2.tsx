@@ -5,6 +5,31 @@ import { Users, Swords, Heart, Shield, Gem, MessageCircle } from 'lucide-react';
 interface Props { isOpen: boolean; onClose: () => void; }
 interface NPCData { 基本信息?: Record<string, unknown>; 武学信息?: Record<string, unknown>; 持有物品?: Record<string, unknown>; 对user态度?: Record<string, unknown>; 所属势力?: string; 武功层次?: string; 好感度?: number; 敬畏度?: number; 利用价值?: number; 当前心理活动?: string; }
 
+/** Render value: if object, show as grid; if string/number, show as-is */
+function renderSectionValue(value: unknown) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length === 0) return null;
+    return (
+      <div className="cm-grid">
+        {entries.map(([k, v]) => (
+          <div key={k} className="cm-grid-item">
+            <span className="cm-grid-label">{k}</span>
+            <span className="cm-grid-value">{String(v)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return <div className="cm-quote">{value}</div>;
+  }
+  if (typeof value === 'number') {
+    return <div className="cm-quote">{String(value)}</div>;
+  }
+  return null;
+}
+
 function AttBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const pct = Math.min(100, Math.max(0, (value / max) * 100));
   return (
@@ -69,62 +94,34 @@ export function ContactsModal({ isOpen, onClose }: Props) {
                   </div>
 
                   {/* 基本信息 */}
-                  {npc['基本信息'] && Object.keys(npc['基本信息']).length > 0 && (
+                  {npc['基本信息'] && (
                     <div className="cm-section">
                       <div className="cm-section-title"><Users size={13} />基本信息</div>
-                      <div className="cm-grid">
-                        {Object.entries(npc['基本信息']).map(([k, v]) => (
-                          <div key={k} className="cm-grid-item">
-                            <span className="cm-grid-label">{k}</span>
-                            <span className="cm-grid-value">{String(v)}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {renderSectionValue(npc['基本信息'])}
                     </div>
                   )}
 
                   {/* 武学信息 */}
-                  {npc['武学信息'] && Object.keys(npc['武学信息']).length > 0 && (
+                  {npc['武学信息'] && (
                     <div className="cm-section">
                       <div className="cm-section-title"><Swords size={13} />武学信息</div>
-                      <div className="cm-grid">
-                        {Object.entries(npc['武学信息']).map(([k, v]) => (
-                          <div key={k} className="cm-grid-item">
-                            <span className="cm-grid-label">{k}</span>
-                            <span className="cm-grid-value">{String(v)}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {renderSectionValue(npc['武学信息'])}
                     </div>
                   )}
 
                   {/* 持有物品 */}
-                  {npc['持有物品'] && Object.keys(npc['持有物品']).length > 0 && (
+                  {npc['持有物品'] && (
                     <div className="cm-section">
                       <div className="cm-section-title"><Gem size={13} />持有物品</div>
-                      <div className="cm-grid">
-                        {Object.entries(npc['持有物品']).map(([k, v]) => (
-                          <div key={k} className="cm-grid-item">
-                            <span className="cm-grid-label">{k}</span>
-                            <span className="cm-grid-value">{String(v)}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {renderSectionValue(npc['持有物品'])}
                     </div>
                   )}
 
                   {/* 对user态度 */}
-                  {npc['对user态度'] && Object.keys(npc['对user态度']).length > 0 && (
+                  {npc['对user态度'] && (
                     <div className="cm-section">
                       <div className="cm-section-title"><Shield size={13} />对我的态度</div>
-                      <div className="cm-grid">
-                        {Object.entries(npc['对user态度']).filter(([k]) => k !== '内心短评').map(([k, v]) => (
-                          <div key={k} className="cm-grid-item">
-                            <span className="cm-grid-label">{k}</span>
-                            <span className="cm-grid-value">{String(v)}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {renderSectionValue(npc['对user态度'])}
                     </div>
                   )}
 
