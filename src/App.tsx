@@ -1,27 +1,31 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { useSillytavern } from './hooks/useSillytavern';
 import { useTheme } from './hooks/useTheme';
 import { SideNav } from './components/SideNav';
 import { StoryArea } from './components/StoryArea';
 import { CommandBar } from './components/CommandBar';
-import { RightPanel } from './components/RightPanel';
-import { StatusModal } from './components/Modals/StatusModalV2';
-import { ContactsModal } from './components/Modals/ContactsModalV2';
-import { BagModal } from './components/Modals/BagModalV2';
-import { NewsModal } from './components/Modals/NewsModalV2';
-import { LeaderboardModal } from './components/Modals/LeaderboardModalV2';
-import { MapModal } from './components/Modals/MapModalV2';
-import { BountyModal } from './components/Modals/BountyModal';
-import { StorageModal } from './components/Modals/StorageModalV2';
-import { SettingsModal } from './components/SillyTavern/SettingsModal';
-import { WelcomePage } from './components/WelcomePage';
-import { NewGameFlow } from './components/NewGameFlow';
-import { ArchiveModal } from './components/ArchiveModal';
-import { ChangelogModal } from './components/ChangelogModal';
 import { NotificationCenter, useNotify } from './components/NotificationCenter';
 import { FullscreenToggle } from './components/FullscreenToggle';
 import './styles/tokens.css';
 import './App.css';
+
+// Lazy-loaded — only fetched when user triggers them
+const RightPanel = lazy(() => import('./components/RightPanel').then(m => ({ default: m.RightPanel })));
+const SettingsModal = lazy(() => import('./components/SillyTavern/SettingsModal').then(m => ({ default: m.SettingsModal })));
+const WelcomePage = lazy(() => import('./components/WelcomePage').then(m => ({ default: m.WelcomePage })));
+const NewGameFlow = lazy(() => import('./components/NewGameFlow').then(m => ({ default: m.NewGameFlow })));
+const ArchiveModal = lazy(() => import('./components/ArchiveModal').then(m => ({ default: m.ArchiveModal })));
+const ChangelogModal = lazy(() => import('./components/ChangelogModal').then(m => ({ default: m.ChangelogModal })));
+const StatusModal = lazy(() => import('./components/Modals/StatusModalV2').then(m => ({ default: m.StatusModal })));
+const ContactsModal = lazy(() => import('./components/Modals/ContactsModalV2').then(m => ({ default: m.ContactsModal })));
+const BagModal = lazy(() => import('./components/Modals/BagModalV2').then(m => ({ default: m.BagModal })));
+const NewsModal = lazy(() => import('./components/Modals/NewsModalV2').then(m => ({ default: m.NewsModal })));
+const LeaderboardModal = lazy(() => import('./components/Modals/LeaderboardModalV2').then(m => ({ default: m.LeaderboardModal })));
+const MapModal = lazy(() => import('./components/Modals/MapModalV2').then(m => ({ default: m.MapModal })));
+const BountyModal = lazy(() => import('./components/Modals/BountyModal').then(m => ({ default: m.BountyModal })));
+const StorageModal = lazy(() => import('./components/Modals/StorageModalV2').then(m => ({ default: m.StorageModal })));
+
+const LazyFallback = () => <div style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', zIndex: 199 }}><div className="dz-loading" style={{ fontSize: 'var(--text-lg)' }}>…</div></div>;
 
 type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 'storage' | 'bounty' | null;
 type DrawerType = 'realm' | 'status' | 'martial' | null;
@@ -67,6 +71,7 @@ function App() {
 
   return (
     <NotificationCenter>
+      <Suspense fallback={<LazyFallback />}>
       {showNewGame ? (
         <NewGameFlow onStart={(chat) => { if (chat) { console.log("[App] onStart chat var keys:", Object.keys(chat.variables)); setChats(prev => [...prev, chat]); setActiveChatId(chat.id); } setShowNewGame(false); setShowWelcome(false); }} />
       ) : showWelcome ? (
@@ -90,29 +95,30 @@ function App() {
             <CommandBar onSend={handleSend} onStop={cancelGeneration} isSending={isSending} chat={activeChat} hasApi={settings?.api?.saved?.some(e => e.enabled) ?? false} onOpenSettings={() => setShowSettings(true)} />
           </main>
 
-          <RightPanel chat={activeChat} openDrawer={drawer} onOpenDrawer={openDrawer}
-            onOpenBag={() => openPanel('bag')} onOpenStorage={() => openPanel('storage')} />
+          <Suspense fallback={null}><RightPanel chat={activeChat} openDrawer={drawer} onOpenDrawer={openDrawer}
+            onOpenBag={() => openPanel('bag')} onOpenStorage={() => openPanel('storage')} /></Suspense>
         </div>
 
         <div className={`dz-overlay ${panel ? 'on' : ''}`} onClick={closePanel} />
 
-        <StatusModal isOpen={panel === 'status'} onClose={closePanel} />
-        <ContactsModal isOpen={panel === 'contacts'} onClose={closePanel} />
-        <BagModal isOpen={panel === 'bag'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
-        <NewsModal isOpen={panel === 'news'} onClose={closePanel} />
-        <LeaderboardModal isOpen={panel === 'leaderboard'} onClose={closePanel} />
-        <MapModal isOpen={panel === 'map'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
-        <BountyModal isOpen={panel === 'bounty'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
-        <StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} />
+        <Suspense fallback={null}><StatusModal isOpen={panel === 'status'} onClose={closePanel} /></Suspense>
+        <Suspense fallback={null}><ContactsModal isOpen={panel === 'contacts'} onClose={closePanel} /></Suspense>
+        <Suspense fallback={null}><BagModal isOpen={panel === 'bag'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} /></Suspense>
+        <Suspense fallback={null}><NewsModal isOpen={panel === 'news'} onClose={closePanel} /></Suspense>
+        <Suspense fallback={null}><LeaderboardModal isOpen={panel === 'leaderboard'} onClose={closePanel} /></Suspense>
+        <Suspense fallback={null}><MapModal isOpen={panel === 'map'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} /></Suspense>
+        <Suspense fallback={null}><BountyModal isOpen={panel === 'bounty'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} /></Suspense>
+        <Suspense fallback={null}><StorageModal isOpen={panel === 'storage'} onClose={closePanel} onSend={(t) => { handleSend(t); closePanel(); }} /></Suspense>
 
-          {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-          {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
+          {showSettings && <Suspense fallback={<LazyFallback />}><SettingsModal onClose={() => setShowSettings(false)} /></Suspense>}
+          {showArchive && <Suspense fallback={<LazyFallback />}><ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} /></Suspense>}
         </div>
       )}
+      </Suspense>
       {/* Modals always render regardless of welcome state */}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
-      {showArchive && <ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} />}
-      {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
+      {showSettings && <Suspense fallback={<LazyFallback />}><SettingsModal onClose={() => setShowSettings(false)} /></Suspense>}
+      {showArchive && <Suspense fallback={<LazyFallback />}><ArchiveModal onClose={() => setShowArchive(false)} onEnterGame={() => { setShowArchive(false); setShowWelcome(false); }} /></Suspense>}
+      {showChangelog && <Suspense fallback={<LazyFallback />}><ChangelogModal onClose={() => setShowChangelog(false)} /></Suspense>}
       <FullscreenToggle />
     </NotificationCenter>
   );
