@@ -441,6 +441,19 @@
   color: var(--wx-ink); font-size: var(--text-base); font-family: var(--font-body);
 }
 .dz-cmd-input::placeholder { color: var(--wx-ink-dim); opacity: 0.5; }
+/* Compact API warning inline button */
+.dz-cmd-api-warn {
+  display: none; /* hidden on desktop */
+  align-items: center; gap: 5px;
+  padding: 3px 10px; margin-right: 4px;
+  background: rgba(181, 40, 26, 0.15); border: 1px solid rgba(181, 40, 26, 0.4);
+  border-radius: var(--rd-sm); cursor: pointer;
+  color: var(--wx-vermillion); font-family: var(--font-body);
+  font-size: var(--text-2xs); white-space: nowrap; flex-shrink: 0;
+}
+.dz-cmd-api-warn-text { font-weight: 600; }
+/* Stats in status bar — hidden on desktop, shown on mobile */
+.sc-stat-hp, .sc-stat-mp { display: none; }
 .dz-cmd-send {
   padding: 8px 22px; border: none; cursor: pointer; font-weight: 700;
   font-family: var(--font-body); font-size: var(--text-sm); border-radius: var(--rd-md);
@@ -965,21 +978,29 @@
     overflow: hidden;
   }
 
-  /* Command bar — safe from browser chrome */
+  /* Command bar — safe from browser chrome, no stat bar */
   .dz-cmd-wrap {
-    padding: 0 10px 10px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    padding: 0 8px 6px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom));
     order: 2;
   }
   .dz-cmd-inner {
-    padding: 6px 6px 6px 14px;
-    gap: 6px;
+    padding: 5px 5px 5px 10px;
+    gap: 5px;
   }
   .dz-cmd-input { font-size: 0.9rem; }
   .dz-cmd-send {
-    padding: 8px 16px; font-size: var(--text-xs);
-    flex-shrink: 0; border-radius: var(--rd-md);
+    padding: 7px 14px; font-size: var(--text-2xs);
+    flex-shrink: 0; border-radius: var(--rd-sm);
   }
+  .dz-cmd-send .lucide, .dz-cmd-send svg { width: 14px; height: 14px; }
+  /* Show compact API warning inline */
+  .dz-cmd-api-warn { display: inline-flex; }
+  /* Show HP/MP in status bar */
+  .sc-stat-hp, .sc-stat-mp { display: inline-flex; }
+  .sc-status { gap: 6px; padding: 4px 6px; flex-wrap: wrap; }
+  .sc-status-item { padding: 3px 8px; font-size: var(--text-2xs); gap: 3px; }
+  .sc-status-item svg, .sc-status-item .lucide { width: 11px; height: 11px; }
 
   /* Right panel */
   .dz-panel { display: none; }

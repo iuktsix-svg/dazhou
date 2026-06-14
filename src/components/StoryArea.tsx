@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { type ChatMessage, USER_ROLE } from '../sillytavern';
 import { useSillytavern } from '../hooks/useSillytavern';
-import { Clock, MapPin, RefreshCw, Edit3, Check, X } from 'lucide-react';
+import { Clock, MapPin, Heart, Sparkles, RefreshCw, Edit3, Check, X } from 'lucide-react';
 
 interface Props {
   messages: ChatMessage[]; streamingText: string; isStreaming: boolean;
@@ -68,6 +68,24 @@ export function StoryArea({ messages, streamingText, isStreaming, statusLocation
   const currentLocation = statusLocation || '大周 · 江湖';
   const currentTime = statusTime || '承平五十年 · 子时';
 
+  // Stats polling (moved from CommandBar so input has room on mobile)
+  const { activeChat } = useSillytavern();
+  const [stats, setStats] = useState({ hp: 0, hpMax: 100, mp: 0, mpMax: 100, demon: 0 });
+  useEffect(() => {
+    const update = () => {
+      const vars = (activeChat?.variables || {}) as unknown as Record<string, unknown>;
+      const p = (vars['主角状态'] || {}) as Record<string, unknown>;
+      setStats({
+        hp: Number(p['当前气血'] || 0), hpMax: Number(p['气血上限'] || 100),
+        mp: Number(p['当前真气'] || 0), mpMax: Number(p['真气上限'] || 100),
+        demon: Number(p['心魔值'] || vars['心魔值'] || 0),
+      });
+    };
+    update();
+    const iv = setInterval(update, 2000);
+    return () => clearInterval(iv);
+  }, [activeChat]);
+
   const hasAI = messages.some(m => m.role === 'assistant');
   const layers: Layer[] = [];
   for (const msg of messages) {
@@ -100,7 +118,12 @@ export function StoryArea({ messages, streamingText, isStreaming, statusLocation
 
   return (
     <div className="dz-story">
-      <div className="sc-status"><span className="sc-status-item"><MapPin size={13} />{currentLocation}</span><span className="sc-status-item"><Clock size={13} />{currentTime}</span></div>
+      <div className="sc-status">
+        <span className="sc-status-item"><MapPin size={13} />{currentLocation}</span>
+        <span className="sc-status-item"><Clock size={13} />{currentTime}</span>
+        <span className="sc-status-item sc-stat-hp"><Heart size={12} />{stats.hp}/{stats.hpMax}</span>
+        <span className="sc-status-item sc-stat-mp"><Sparkles size={12} />{stats.mp}/{stats.mpMax}</span>
+      </div>
       <div className="dz-story-inner" ref={storyRef}>
         {layers.map((layer, i) => <div key={layer.id}>{i > 0 && <Divider />}{renderLayer(layer)}</div>)}
         {isStreaming && streamingText && <div><Divider />{parseTransitions(streamingText).map((part, j) => typeof part === 'string' ? <div key={j}>{parseBlocks(cleanContent(part, stripTags)).map((b, k) => b.type === 'npc' ? <div key={k} className="dz-bubble"><div className="dz-bubble-label">{b.name}</div><div className="dz-bubble-text">{b.text}</div></div> : <div key={k} className="dz-narration">{b.text}</div>)}</div> : <TransitionDivider key={j} text={part.text} />)}<span className="dz-cursor" /></div>}
