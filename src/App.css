@@ -3,7 +3,7 @@
    宣纸为底 · 墨色为骨 · 朱砂点睛
    ============================================================ */
 
-.dz-root { height: 100vh; display: flex; flex-direction: column; background: var(--wx-paper); color: var(--wx-ink); overflow: hidden; }
+.dz-root { height: 100vh; height: 100dvh; display: flex; flex-direction: column; background: var(--wx-paper); color: var(--wx-ink); overflow: hidden; }
 .dz-body-row { flex: 1; display: flex; overflow: hidden; }
 
 /* ============================================================
@@ -978,22 +978,26 @@
     overflow: hidden;
   }
 
-  /* Command bar — safe from browser chrome, no stat bar */
+  /* Command bar — fixed at bottom, never hidden */
   .dz-cmd-wrap {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
     padding: 0 8px 6px;
     padding-bottom: calc(6px + env(safe-area-inset-bottom));
-    order: 2;
+    background: var(--wx-paper);
   }
   .dz-cmd-inner {
-    padding: 5px 5px 5px 10px;
-    gap: 5px;
+    padding: 6px 6px 6px 12px;
+    gap: 6px;
+    border-radius: var(--rd-md);
   }
   .dz-cmd-input { font-size: 0.9rem; }
   .dz-cmd-send {
-    padding: 7px 14px; font-size: var(--text-2xs);
+    padding: 8px 14px; font-size: var(--text-2xs);
     flex-shrink: 0; border-radius: var(--rd-sm);
   }
   .dz-cmd-send .lucide, .dz-cmd-send svg { width: 14px; height: 14px; }
+  /* Push story content above fixed command bar */
+  .dz-main { padding-bottom: 56px; }
   /* Show compact API warning inline */
   .dz-cmd-api-warn { display: inline-flex; }
   /* Show HP/MP in status bar */
