@@ -441,17 +441,22 @@
   color: var(--wx-ink); font-size: var(--text-base); font-family: var(--font-body);
 }
 .dz-cmd-input::placeholder { color: var(--wx-ink-dim); opacity: 0.5; }
-/* Compact API warning inline button */
-.dz-cmd-api-warn {
-  display: none; /* hidden on desktop */
-  align-items: center; gap: 5px;
-  padding: 3px 10px; margin-right: 4px;
-  background: rgba(181, 40, 26, 0.15); border: 1px solid rgba(181, 40, 26, 0.4);
-  border-radius: var(--rd-sm); cursor: pointer;
-  color: var(--wx-vermillion); font-family: var(--font-body);
-  font-size: var(--text-2xs); white-space: nowrap; flex-shrink: 0;
+/* API warning bar — above input, never inside input row */
+.dz-cmd-api-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px; margin-bottom: 6px;
+  background: rgba(181, 40, 26, 0.1); border: 1px solid rgba(181, 40, 26, 0.3);
+  border-radius: var(--rd-md);
+  color: var(--wx-vermillion); font-family: var(--font-body); font-size: var(--text-xs);
 }
-.dz-cmd-api-warn-text { font-weight: 600; }
+.dz-cmd-api-bar-text { flex: 1; }
+.dz-cmd-api-bar-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; background: var(--wx-vermillion); color: #fff;
+  border: none; border-radius: var(--rd-sm); cursor: pointer;
+  font-family: var(--font-body); font-size: var(--text-xs); font-weight: 600;
+  flex-shrink: 0;
+}
 /* Stats in status bar — hidden on desktop, shown on mobile */
 .sc-stat-hp, .sc-stat-mp { display: none; }
 .dz-cmd-send {
@@ -463,6 +468,7 @@
 .dz-cmd-send.on:hover { background: var(--wx-vermillion-light); }
 .dz-cmd-send.off { background: var(--wx-surface-dark); color: var(--wx-ink-dim); cursor: not-allowed; }
 .dz-cmd-send.stop { background: var(--wx-ink-light); color: #fff; }
+.dz-cmd-send-label { font-weight: 700; }
 
 /* Status bar above input */
 .dz-status-mini {
@@ -985,21 +991,22 @@
     padding-bottom: calc(6px + env(safe-area-inset-bottom));
     background: var(--wx-paper);
   }
+  .dz-cmd-api-bar { padding: 5px 10px; margin-bottom: 4px; font-size: var(--text-2xs); gap: 5px; }
+  .dz-cmd-api-bar-btn { padding: 3px 10px; font-size: var(--text-2xs); }
   .dz-cmd-inner {
-    padding: 6px 6px 6px 12px;
-    gap: 6px;
+    padding: 7px 7px 7px 12px;
+    gap: 8px;
     border-radius: var(--rd-md);
   }
   .dz-cmd-input { font-size: 0.9rem; }
   .dz-cmd-send {
-    padding: 8px 14px; font-size: var(--text-2xs);
-    flex-shrink: 0; border-radius: var(--rd-sm);
+    width: 40px; height: 40px; min-width: 40px;
+    padding: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
   }
-  .dz-cmd-send .lucide, .dz-cmd-send svg { width: 14px; height: 14px; }
+  .dz-cmd-send-label { display: none; }
   /* Push story content above fixed command bar */
-  .dz-main { padding-bottom: 56px; }
-  /* Show compact API warning inline */
-  .dz-cmd-api-warn { display: inline-flex; }
+  .dz-main { padding-bottom: 62px; }
   /* Show HP/MP in status bar */
   .sc-stat-hp, .sc-stat-mp { display: inline-flex; }
   .sc-status { gap: 6px; padding: 4px 6px; flex-wrap: wrap; }
