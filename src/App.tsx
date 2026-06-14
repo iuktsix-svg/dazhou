@@ -73,7 +73,7 @@ function App() {
     <NotificationCenter>
       <Suspense fallback={<LazyFallback />}>
       {showNewGame ? (
-        <NewGameFlow onStart={(chat) => { if (chat) { console.log("[App] onStart chat var keys:", Object.keys(chat.variables)); setChats(prev => [...prev, chat]); setActiveChatId(chat.id); } setShowNewGame(false); setShowWelcome(false); }} />
+        <NewGameFlow onStart={(chat) => { if (chat) { console.log("[App] onStart chat var keys:", Object.keys(chat.variables)); setChats([...chats, chat]); setActiveChatId(chat.id); } setShowNewGame(false); setShowWelcome(false); }} />
       ) : showWelcome ? (
         <WelcomePage
           onNewGame={() => { setShowNewGame(true); }}
