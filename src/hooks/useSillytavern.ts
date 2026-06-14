@@ -77,6 +77,22 @@ export function useSillytavern() {
         patched = true;
       }
       if (patched) { await saveSettings(s); console.log('[init] 已迁移至新接口库格式'); }
+      // Auto-seed dev API — localhost + LAN IPs, never in production
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
+      if (isLocal && s.api.saved.length === 0) {
+        try {
+          const seed = await (await fetch('/api-seed.json')).json();
+          if (seed?.endpoints?.length) {
+            s.api = { ...s.api, saved: seed.endpoints };
+            if (seed.mainRouteId) s.api.mainRouteId = seed.mainRouteId;
+            if (seed.varRouteId) s.api.varRouteId = seed.varRouteId;
+            if (seed.memRouteId) s.api.memRouteId = seed.memRouteId;
+            await saveSettings(s);
+            console.log('[init] 已注入本地开发 API 配置');
+          }
+        } catch { /* seed file not found — skip */ }
+      }
       setSettings(s);
     }
     // Auto-import / refresh built-in preset

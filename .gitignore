@@ -28,3 +28,6 @@ src/lorebooks/*.bak
 *.sln
 *.sw?
 .last-preset.json
+
+# Dev API seed — contains keys, never commit
+public/api-seed.json

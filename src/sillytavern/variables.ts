@@ -90,12 +90,15 @@ export function injectVariables(
   variables: Record<string, string | number>,
 ): string {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
-    return variables[key] !== undefined ? String(variables[key]) : `{{${key}}}`;
+    const val = variables[key];
+    if (val === undefined) return `{{${key}}}`;
+    return typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val);
   });
 }
 
 /**
  * Render variables as a formatted block for system prompt.
+ * Nested objects/arrays are serialized as JSON so the AI can read them.
  */
 export function renderVariablesBlock(
   variables: Record<string, string | number>,
@@ -103,6 +106,11 @@ export function renderVariablesBlock(
   const entries = Object.entries(variables);
   if (entries.length === 0) return '';
 
-  const lines = entries.map(([k, v]) => `  ${k}: ${v}`);
+  const lines = entries.map(([k, v]) => {
+    const display = typeof v === 'object' && v !== null
+      ? JSON.stringify(v, null, 2)
+      : String(v);
+    return `  ${k}: ${display}`;
+  });
   return `<vars>\n${lines.join('\n')}\n</vars>`;
 }
