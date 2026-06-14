@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, Square, Heart, Sparkles, Skull } from 'lucide-react';
+import { Send, Square, Heart, Sparkles, Skull, AlertTriangle, Settings } from 'lucide-react';
 import type { ChatSession } from '../sillytavern';
 
 interface Props {
@@ -7,9 +7,11 @@ interface Props {
   onStop: () => void;
   isSending: boolean;
   chat: ChatSession | null;
+  hasApi: boolean;
+  onOpenSettings: () => void;
 }
 
-export function CommandBar({ onSend, onStop, isSending, chat }: Props) {
+export function CommandBar({ onSend, onStop, isSending, chat, hasApi, onOpenSettings }: Props) {
   const [input, setInput] = useState('');
   const [stats, setStats] = useState({ hp: 0, hpMax: 100, mp: 0, mpMax: 100, demon: 0 });
 
@@ -47,6 +49,28 @@ export function CommandBar({ onSend, onStop, isSending, chat }: Props) {
           <Skull size={14} /> 心魔 {stats.demon}
         </span>
       </div>
+
+      {/* API missing warning */}
+      {!hasApi && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+          padding: '10px 16px', marginBottom: 8,
+          background: 'rgba(181, 40, 26, 0.12)', border: '1px solid rgba(181, 40, 26, 0.35)',
+          borderRadius: 'var(--rd-md)', fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)',
+          color: 'var(--wx-vermillion)',
+        }}>
+          <AlertTriangle size={16} />
+          <span>尚未配置 AI 接口，无法生成剧情</span>
+          <button onClick={onOpenSettings} style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '4px 14px', background: 'var(--wx-vermillion)', color: '#fff',
+            border: 'none', borderRadius: 'var(--rd-sm)', cursor: 'pointer',
+            fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', fontWeight: 600,
+          }}>
+            <Settings size={12} /> 前往配置
+          </button>
+        </div>
+      )}
 
       {/* Input row */}
       <div className="dz-cmd-inner">

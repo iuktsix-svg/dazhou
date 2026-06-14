@@ -27,7 +27,7 @@ type PanelId = 'status' | 'contacts' | 'bag' | 'news' | 'leaderboard' | 'map' | 
 type DrawerType = 'realm' | 'status' | 'martial' | null;
 
 function App() {
-  const { isLoading, activeChat, activeChatId, chats, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, setChats, setActiveChatId, editMessage, deleteMessagesFrom } = useSillytavern();
+  const { isLoading, activeChat, activeChatId, chats, settings, isSending, sendMessage, cancelGeneration, streamingText, lastError, clearError, setChats, setActiveChatId, editMessage, deleteMessagesFrom } = useSillytavern();
   const { notify } = useNotify();
   const { theme, toggle: toggleTheme } = useTheme();
   const [panel, setPanel] = useState<PanelId>(null);
@@ -87,7 +87,7 @@ function App() {
               statusLocation={(()=>{ const c = chats.find(x=>x.id===activeChatId); return (c?.variables as any)?.['主角状态']?.['当前所在地点'] || ''; })()}
               statusTime={(()=>{ const c = chats.find(x=>x.id===activeChatId); return (c?.variables as any)?.['系统与时辰']?.['当前时辰'] || ''; })()}
               onOption={handleSend} onRegenerate={handleRegenerate} onEditMessage={handleEditMessage} />
-            <CommandBar onSend={handleSend} onStop={cancelGeneration} isSending={isSending} chat={activeChat} />
+            <CommandBar onSend={handleSend} onStop={cancelGeneration} isSending={isSending} chat={activeChat} hasApi={settings?.api?.saved?.some(e => e.enabled) ?? false} onOpenSettings={() => setShowSettings(true)} />
           </main>
 
           <RightPanel chat={activeChat} openDrawer={drawer} onOpenDrawer={openDrawer}
