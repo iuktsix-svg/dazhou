@@ -64,7 +64,9 @@ export {
 export {
   matchLorebooks,
   assembleContext,
+  createLorebookSession,
   type MatchResult,
+  type LorebookSessionOptions,
 } from './lorebook-engine';
 
 // Prompt assembler

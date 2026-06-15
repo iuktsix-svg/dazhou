@@ -70,6 +70,14 @@ function parseEntry(
     selectiveLogic: (raw.selectiveLogic as number) === 1 ? 'OR' : 'AND',
     comment: (raw.comment as string) || '',
     insertionOrder: asNumber(raw.insertion_order),
+    // Advanced features
+    group: (raw.group as string) || '',
+    groupWeight: asNumber(raw.groupWeight) ?? 100,
+    useGroupScoring: !!raw.useGroupScoring,
+    cooldown: raw.cooldown !== undefined ? asNumber(raw.cooldown) ?? null : null,
+    sticky: raw.sticky !== undefined ? asNumber(raw.sticky) ?? null : null,
+    delay: raw.delay !== undefined ? asNumber(raw.delay) ?? null : null,
+    probability: asNumber(raw.probability) ?? 100,
   };
 }
 
@@ -126,6 +134,13 @@ export function exportSillyTavernWorldInfo(lorebook: Lorebook): Record<string, u
       order: entry.order,
       comment: entry.comment,
       insertion_order: entry.insertionOrder ?? entry.order,
+      group: entry.group || '',
+      groupWeight: entry.groupWeight ?? 100,
+      useGroupScoring: entry.useGroupScoring ?? false,
+      cooldown: entry.cooldown ?? null,
+      sticky: entry.sticky ?? null,
+      delay: entry.delay ?? null,
+      probability: entry.probability ?? 100,
     };
   }
 

@@ -22,6 +22,13 @@ export function createDefaultEntry(lorebookId: string, overrides?: Partial<Loreb
     useRegex: false,
     order: 100,
     selectiveLogic: 'AND',
+    group: '',
+    groupWeight: 100,
+    useGroupScoring: false,
+    cooldown: null,
+    sticky: null,
+    delay: null,
+    probability: 100,
     ...overrides,
   };
 }

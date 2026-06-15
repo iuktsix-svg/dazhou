@@ -31,3 +31,5 @@ src/lorebooks/*.bak
 
 # Dev API seed — contains keys, never commit
 public/api-seed.json
+*.old
+*.backup

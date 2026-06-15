@@ -22,6 +22,14 @@ export interface LorebookEntry {
   // extended metadata (imported from SillyTavern JSON)
   comment?: string;
   insertionOrder?: number;
+  // Advanced features
+  group?: string;              // entry group for group-based scoring
+  groupWeight?: number;        // weight within group (0-100)
+  useGroupScoring?: boolean;   // enable group-based competitive scoring
+  cooldown?: number | null;    // turns before entry can re-trigger (null = no cooldown)
+  sticky?: number | null;      // turns entry stays active after key match (null = not sticky)
+  delay?: number | null;       // turns to wait before first injection
+  probability?: number;        // chance of injection when matched (0-100, default 100)
 }
 
 export interface Lorebook {
@@ -172,6 +180,10 @@ export interface PromptAssemblyInput {
   userName: string;
   characterName: string;
   variables: Record<string, string | number>;
+  /** Stateful lorebook session for cooldown/sticky/group tracking */
+  lorebookSession?: ReturnType<typeof import('./lorebook-engine').createLorebookSession>;
+  /** Max characters of lorebook content to inject (0 = unlimited) */
+  maxContextChars?: number;
 }
 
 export interface PromptAssemblyResult {

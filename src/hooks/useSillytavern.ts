@@ -11,6 +11,7 @@ import {
   getChats, saveChat, deleteChat as deleteChatById,
   assemblePrompt, truncateChatAt, branchChat,
   extractVariables, mergeVariables,
+  createLorebookSession,
   chatCompletions, streamChatCompletions,
   parseTaggedOutput, extractMainText, extractOptions, extractThinking,
   USER_ROLE,
@@ -78,6 +79,13 @@ export function useSillytavern() {
 
   // Ref that always mirrors latest store — used by sendMessage to avoid stale closure
   const abortRef = useRef<AbortController | null>(null);
+
+  // Lorebook session with cooldown/sticky/group/token-budget support
+  const lorebookSessionRef = useRef(createLorebookSession({ maxContextChars: 5000 }));
+  // Reset session when active chat changes
+  useEffect(() => {
+    lorebookSessionRef.current.reset();
+  }, [store.activeChatId]);
 
   // ---- Init ----
   const loadAll = useCallback(async () => {
@@ -316,15 +324,17 @@ export function useSillytavern() {
         userName: st.settings!.userName,
         characterName: st.settings!.characterName,
         variables: currentVariables,
+        lorebookSession: lorebookSessionRef.current,
+        maxContextChars: 5000,
       });
 
-      // Inject memory context into system prompt
+      // Inject memory context at the TOP of system prompt (so AI sees past context first)
       if (memoryContext) {
         const sysIdx = promptMessages.findIndex(m => m.role === 'system');
         if (sysIdx >= 0) {
           promptMessages[sysIdx] = {
             ...promptMessages[sysIdx],
-            content: promptMessages[sysIdx].content + '\n\n' + memoryContext,
+            content: memoryContext + '\n\n' + promptMessages[sysIdx].content,
           };
         }
       }
@@ -381,6 +391,7 @@ export function useSillytavern() {
       // ============================================================
       // STAGE 2: AI2 — Dedicated Variable Processing
       // ============================================================
+      // NOTE: We pass nextVariables (post-AI1) so AI2 can see what AI1 already changed
       if (st.settings!.varEnabled !== false && api.varRouteId && api.saved.some(e => e.id === api.varRouteId && e.enabled) && summaryText) {
         try {
           const api2Cfg = resolveApiConfig('variables', api);
@@ -389,11 +400,11 @@ export function useSillytavern() {
             messages: [
               {
                 role: 'system',
-                content: (st.settings!.varPrompt || DEFAULT_VAR_PROMPT) + `\n\n当前变量状态：\n${JSON.stringify(currentVariables, null, 2)}`,
+                content: (st.settings!.varPrompt || DEFAULT_VAR_PROMPT) + `\n\n当前变量状态（已含AI1本轮更新）：\n${JSON.stringify(nextVariables, null, 2)}`,
               },
               {
                 role: 'user',
-                content: `剧情摘要：${summaryText}\n\n请输出需要更新的 <var> 标签。`,
+                content: `剧情摘要：${summaryText}\n\n本轮AI1已更新的变量：${JSON.stringify(ai1Vars)}\n\n请检查是否有遗漏或需要补充更新的变量。`,
               },
             ],
             temperature: 0.1,
