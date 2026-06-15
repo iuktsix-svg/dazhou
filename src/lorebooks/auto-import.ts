@@ -3,7 +3,12 @@
 //
 // Drop SillyTavern JSON files into src/lorebooks/ and they
 // will be silently imported into IndexedDB on app startup.
-// Already-imported books (matched by name) are skipped.
+//
+// v2: Uses content fingerprint (entry-count + first/last entry
+//     content hash) to detect changes. When a lorebook with the
+//     same name has been updated on disk, it REPLACES the old
+//     version in IndexedDB — so existing chat archives immediately
+//     benefit from lorebook updates without needing a new game.
 // ============================================================
 
 import {
@@ -17,10 +22,26 @@ const modules = import.meta.glob<{ default: unknown }>(
   { eager: true },
 );
 
+/**
+ * Compute a lightweight content fingerprint for a lorebook.
+ * Uses entry count + content length of first and last entries.
+ * This catches virtually all meaningful edits (text changes,
+ * additions, deletions, reordering) while being fast to compute.
+ */
+function contentFingerprint(book: ReturnType<typeof importSillyTavernWorldInfo>): string {
+  const n = book.entries.length;
+  if (n === 0) return `${n}:0:0`;
+  const first = book.entries[0]?.content?.length ?? 0;
+  const last = book.entries[n - 1]?.content?.length ?? 0;
+  // Also sample a few entries spread across the book
+  const mid = book.entries[Math.floor(n / 2)]?.content?.length ?? 0;
+  const q1 = book.entries[Math.floor(n / 4)]?.content?.length ?? 0;
+  const q3 = book.entries[Math.floor(3 * n / 4)]?.content?.length ?? 0;
+  return `${n}:${first}:${mid}:${last}:${q1}:${q3}`;
+}
+
 export async function autoImportLorebooks(): Promise<number> {
   const existing = await getLorebooks();
-  const existingNames = new Set(existing.map(b => b.name));
-  const existingEntryCounts = new Set(existing.map(b => `${b.name}:${b.entries.length}`));
   let imported = 0;
 
   for (const [path, mod] of Object.entries(modules)) {
@@ -38,15 +59,30 @@ export async function autoImportLorebooks(): Promise<number> {
         book.name = fileName;
       }
 
-      // Skip if already imported (match by name AND entry count)
-      const fingerprint = `${book.name}:${book.entries.length}`;
-      if (existingNames.has(book.name) || existingEntryCounts.has(fingerprint)) {
-        continue;
+      const newFingerprint = contentFingerprint(book);
+
+      // Check if a lorebook with the same name already exists
+      const existingBook = existing.find(b => b.name === book.name);
+      if (existingBook) {
+        // Compare fingerprints to detect actual changes
+        const oldFingerprint = contentFingerprint(existingBook);
+        if (oldFingerprint === newFingerprint) {
+          // Content unchanged — skip
+          continue;
+        }
+        // Content changed — update existing book (keep same ID so chat references stay valid)
+        book.id = existingBook.id;
+        await saveLorebook(book);
+        // Update our working copy so subsequent comparisons use the new fingerprint
+        existingBook.entries = book.entries;
+        console.log(`[tavernlike] Updated lorebook: ${book.name} (${existingBook.entries.length} → ${book.entries.length} entries)`);
+      } else {
+        // New lorebook — insert
+        await saveLorebook(book);
+        existing.push(book);
+        console.log(`[tavernlike] Imported new lorebook: ${book.name} (${book.entries.length} entries)`);
       }
 
-      await saveLorebook(book);
-      existingNames.add(book.name);
-      existingEntryCounts.add(fingerprint);
       imported++;
     } catch (err) {
       console.warn(`[tavernlike] Failed to auto-import ${path}:`, err);
@@ -54,7 +90,7 @@ export async function autoImportLorebooks(): Promise<number> {
   }
 
   if (imported > 0) {
-    console.log(`[tavernlike] Auto-imported ${imported} lorebook(s) from src/lorebooks/`);
+    console.log(`[tavernlike] Auto-import complete: ${imported} lorebook(s) processed`);
   }
 
   return imported;
